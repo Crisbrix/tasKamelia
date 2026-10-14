@@ -1,3 +1,6 @@
+-- Tareas Kamelia · Esquema de referencia para TiDB/MySQL.
+-- NOTA: el runtime serverless usa la copia embebida en store/mysql.js
+-- (los .sql no se empaquetan en la función de Vercel).
 SET NAMES utf8mb4;
 
 CREATE TABLE IF NOT EXISTS users (
