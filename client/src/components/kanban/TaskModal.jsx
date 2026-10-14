@@ -9,15 +9,15 @@ import { Modal } from '../ui/Modal';
 
 const EMPTY = { title: '', description: '', area: '', assigneeId: '', priority: 'media' };
 
-export function TaskModal({ open, onClose, zone, staff, onCreated }) {
+export function TaskModal({ open, onClose, zone, defaultArea, staff, onCreated }) {
   const toast = useToast();
   const zoneInfo = ZONES[zone];
   const [form, setForm] = useState(EMPTY);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (open) setForm({ ...EMPTY, area: zoneInfo.areas[0] });
-  }, [open, zone]);
+    if (open) setForm({ ...EMPTY, area: defaultArea || zoneInfo.areas[0] });
+  }, [open, zone, defaultArea]);
 
   const submit = async (e) => {
     e.preventDefault();

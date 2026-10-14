@@ -33,6 +33,7 @@ export function AppShell() {
   const { user, logout } = useAuth();
   const { theme, toggle, isLight } = useTheme();
   const [page, setPage] = useState('board');
+  if (!user) return null;
   const role = ROLES[user.role];
   const zone = user.zone ? ZONES[user.zone] : null;
   const roleColor = accentText(role?.color, isLight);

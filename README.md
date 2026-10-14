@@ -77,7 +77,7 @@ Los componentes de calificación y de creación de usuarios quedan **envueltos p
 
 ## Zonas y flujos
 
-1. **Cocina (prioridad máxima)** — áreas: *Mise en place, Neveras, Aseo, Picado*.
+1. **Cocina (prioridad máxima)** — sub-pestañas por área (*Mise en place, Neveras, Aseo, Picado*), cada una con su propio Kanban: las áreas no comparten tareas.
    Chef crea personal/tarea → el personal arrastra a **Hecho** → se desbloquea el **Star Rating** para Auditor/Gerente.
 2. **Finca (mantenimiento y aseo)** — gestión exclusiva del **Auditor**: crea encargados, asigna trabajos y los califica al pasar a "Hecho".
 3. **Comedor (servicio)** — personal predefinido en el seed:

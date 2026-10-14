@@ -21,7 +21,7 @@ function Router() {
   }
 
   return (
-    <AnimatePresence mode="wait">
+    <AnimatePresence initial={false}>
       <motion.div
         key={user ? 'shell' : 'login'}
         initial={{ opacity: 0, scale: 0.98 }}

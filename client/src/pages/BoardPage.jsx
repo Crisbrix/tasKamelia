@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { ListTodo, Plus, ShieldHalf, Users } from 'lucide-react';
+import { Plus, ShieldHalf, Users } from 'lucide-react';
 import { api } from '../lib/api';
 import { ZONES } from '../lib/constants';
+import { accentText } from '../lib/theme';
+import { useTheme } from '../context/ThemeContext';
 import { canCreateTask, canManageZone, canManageUsers, canListUsers } from '../lib/permissions';
 import { useToast } from '../components/ui/Toast';
 import { Button } from '../components/ui/Button';
@@ -13,11 +15,12 @@ import { TeamPanel } from '../components/team/TeamPanel';
 
 export function BoardPage({ user }) {
   const toast = useToast();
+  const { isLight } = useTheme();
   const [zoneId, setZoneId] = useState('cocina');
   const [tasks, setTasks] = useState([]);
   const [staff, setStaff] = useState([]);
   const [overview, setOverview] = useState(null);
-  const [area, setArea] = useState('all');
+  const [area, setArea] = useState(ZONES.cocina.areas[0]);
   const [flashId, setFlashId] = useState(null);
   const [taskModal, setTaskModal] = useState(false);
   const [teamOpen, setTeamOpen] = useState(false);
@@ -50,17 +53,19 @@ export function BoardPage({ user }) {
 
   useEffect(() => {
     loadZone(zoneId);
-    setArea('all');
+    setArea(ZONES[zoneId].areas[0]);
   }, [zoneId, loadZone]);
 
   useEffect(() => {
     loadOverview();
   }, [loadOverview]);
 
-  const visibleTasks = useMemo(
-    () => (area === 'all' ? tasks : tasks.filter((t) => t.area === area)),
-    [tasks, area],
-  );
+  const visibleTasks = useMemo(() => tasks.filter((t) => t.area === area), [tasks, area]);
+  const countByArea = useMemo(() => {
+    const map = {};
+    for (const t of tasks) map[t.area] = (map[t.area] || 0) + 1;
+    return map;
+  }, [tasks]);
 
   const handleMove = async (task, status) => {
     if (task.status === status) return;
@@ -152,34 +157,42 @@ export function BoardPage({ user }) {
             <StatsBar zone={zone} overview={overview} />
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setArea('all')}
-              className={`chip border transition ${area === 'all' ? 'text-white light:text-zinc-900' : 'border-white/10 text-zinc-500 hover:text-zinc-300 light:border-black/10 light:hover:text-zinc-800'}`}
-              style={
-                area === 'all'
-                  ? { background: `${zone.accent}26`, borderColor: `${zone.accent}77`, color: zone.accent }
-                  : undefined
-              }
-            >
-              Todas
-            </button>
+          <div className="glass flex flex-wrap gap-1 rounded-2xl p-1.5" role="tablist" aria-label={`Áreas de ${zone.label}`}>
             {zone.areas.map((a) => {
               const active = area === a;
               return (
                 <button
                   key={a}
                   type="button"
-                  onClick={() => setArea(active ? 'all' : a)}
-                  className="chip border transition"
-                  style={
-                    active
-                      ? { background: `${zone.accent}26`, borderColor: `${zone.accent}77`, color: zone.accent }
-                      : { borderColor: 'rgba(255,255,255,0.1)', color: '#71717a' }
-                  }
+                  role="tab"
+                  aria-selected={active}
+                  onClick={() => setArea(a)}
+                  className="relative flex-1 whitespace-nowrap rounded-xl px-4 py-2 outline-none transition focus-visible:ring-2 focus-visible:ring-white/40"
                 >
-                  {a}
+                  {active && (
+                    <motion.span
+                      layoutId="area-tab-pill"
+                      transition={{ type: 'spring', stiffness: 460, damping: 36 }}
+                      className="absolute inset-0 rounded-xl"
+                      style={{ background: `${zone.accent}26`, boxShadow: `inset 0 0 0 1px ${zone.accent}66` }}
+                    />
+                  )}
+                  <span
+                    className="relative z-10 flex items-center justify-center gap-2 text-[13px] font-extrabold"
+                    style={{ color: active ? accentText(zone.accent, isLight) : '#71717a' }}
+                  >
+                    {a}
+                    <span
+                      className="grid h-5 min-w-5 place-items-center rounded-full px-1 text-[10px]"
+                      style={
+                        active
+                          ? { background: zone.accent, color: '#06070A' }
+                          : { background: 'rgba(127,127,140,0.18)', color: '#8A90A2' }
+                      }
+                    >
+                      {countByArea[a] || 0}
+                    </span>
+                  </span>
                 </button>
               );
             })}
@@ -190,12 +203,6 @@ export function BoardPage({ user }) {
               {[0, 1, 2].map((i) => (
                 <div key={i} className="glass h-[420px] animate-pulse rounded-2xl opacity-60" />
               ))}
-            </div>
-          ) : visibleTasks.length === 0 && area !== 'all' ? (
-            <div className="glass grid place-items-center rounded-2xl py-14 text-center">
-              <ListTodo className="mb-2 text-zinc-600 light:text-zinc-400" />
-              <p className="text-sm font-semibold text-zinc-400 light:text-zinc-600">No hay tareas en esta área</p>
-              <p className="text-xs text-zinc-600 light:text-zinc-400">Cambia de área o crea una nueva tarea</p>
             </div>
           ) : (
             <KanbanBoard
@@ -213,6 +220,7 @@ export function BoardPage({ user }) {
         open={taskModal}
         onClose={() => setTaskModal(false)}
         zone={zoneId}
+        defaultArea={area}
         staff={staff}
         onCreated={(task) => {
           setTasks((list) => [...list, task]);
