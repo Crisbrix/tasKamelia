@@ -100,6 +100,16 @@ export function canListUsers(user, zone) {
   return canManageZone(user, zone) || canManageUsers(user, zone) || zone === user.zone;
 }
 
+/** Baja de tareas: Gerente todo; gestores solo en sus zonas. */
+export function canDeleteTask(user, task) {
+  if (!user || !task) return false;
+  if (user.role === 'gerente') return true;
+  if (user.role === 'auditor') return task.zone === 'finca' || task.zone === 'cocina';
+  if (user.role === 'chef') return task.zone === 'cocina';
+  if (user.role === 'jefe_meseros') return task.zone === 'comedor';
+  return false;
+}
+
 export function canAccessAdmin(user) {
   return user?.role === 'gerente';
 }

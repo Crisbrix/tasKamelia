@@ -3,7 +3,7 @@ import { useDroppable } from '@dnd-kit/core';
 import { TaskCard } from './TaskCard';
 import { canEditTask } from '../../lib/permissions';
 
-export function Column({ status, tasks, user, flashId, onRate }) {
+export function Column({ status, tasks, user, flashId, onRate, onEdit, onDelete }) {
   const { setNodeRef, isOver } = useDroppable({ id: `col:${status.id}` });
 
   return (
@@ -49,6 +49,8 @@ export function Column({ status, tasks, user, flashId, onRate }) {
               task={task}
               user={user}
               onRate={onRate}
+              onEdit={onEdit}
+              onDelete={onDelete}
               flash={flashId === task.id}
               draggable={canEditTask(user, task)}
             />

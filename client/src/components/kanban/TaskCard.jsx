@@ -1,9 +1,9 @@
-import { forwardRef } from 'react';
+import { forwardRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useDraggable } from '@dnd-kit/core';
-import { Check, Flame, Lock, Sparkles } from 'lucide-react';
+import { Check, Flame, Lock, Pencil, Sparkles, Trash2, X } from 'lucide-react';
 import { PRIORITY_MAP, ZONES } from '../../lib/constants';
-import { canRate } from '../../lib/permissions';
+import { canEditTask, canDeleteTask, canRate } from '../../lib/permissions';
 import { StarRating } from '../audit/StarRating';
 
 const initials = (name = '?') =>
@@ -22,11 +22,14 @@ function Avatar({ name }) {
   );
 }
 
-export function TaskCardView({ task, user, flash = false, overlay = false, dimmed = false, onRate }) {
+export function TaskCardView({ task, user, flash = false, overlay = false, dimmed = false, onRate, onEdit, onDelete }) {
   const zone = ZONES[task.zone];
   const priority = PRIORITY_MAP[task.priority] || PRIORITY_MAP.media;
   const auditable = task.status === 'done' && zone.rating;
   const mayRate = auditable && canRate(user, task);
+  const mayEdit = !overlay && canEditTask(user, task);
+  const mayDelete = !overlay && canDeleteTask(user, task);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   return (
     <motion.article
@@ -41,6 +44,67 @@ export function TaskCardView({ task, user, flash = false, overlay = false, dimme
       }`}
       style={{ boxShadow: `inset 3px 0 0 ${zone.accent}` }}
     >
+      {(mayEdit || mayDelete) && !flash && (
+        <div
+          className="absolute right-2 top-2 z-10 flex items-center gap-0.5 rounded-lg border border-white/10 bg-black/60 p-0.5 opacity-0 backdrop-blur-md transition group-hover:opacity-100 light:border-black/10 light:bg-white/90"
+          onPointerDown={(e) => e.stopPropagation()}
+        >
+          {mayEdit && (
+            <button
+              type="button"
+              title="Editar tarea"
+              aria-label="Editar tarea"
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit?.(task);
+              }}
+              className="rounded-md p-1.5 text-zinc-400 transition hover:bg-white/10 hover:text-white light:hover:bg-black/5 light:hover:text-zinc-900"
+            >
+              <Pencil size={13} />
+            </button>
+          )}
+          {mayDelete &&
+            (confirmDelete ? (
+              <>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setConfirmDelete(false);
+                    onDelete?.(task);
+                  }}
+                  className="rounded-md bg-kamelia px-2 py-1 text-[10px] font-extrabold uppercase text-white"
+                >
+                  Sí
+                </button>
+                <button
+                  type="button"
+                  aria-label="Cancelar"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setConfirmDelete(false);
+                  }}
+                  className="rounded-md p-1 text-zinc-400 transition hover:bg-white/10 hover:text-white light:hover:bg-black/5 light:hover:text-zinc-900"
+                >
+                  <X size={13} />
+                </button>
+              </>
+            ) : (
+              <button
+                type="button"
+                title="Eliminar tarea"
+                aria-label="Eliminar tarea"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setConfirmDelete(true);
+                }}
+                className="rounded-md p-1.5 text-zinc-400 transition hover:bg-kamelia/15 hover:text-kamelia"
+              >
+                <Trash2 size={13} />
+              </button>
+            ))}
+        </div>
+      )}
       <div className="mb-2 flex items-start justify-between gap-2">
         <span className="chip border" style={{ color: zone.accent, borderColor: `${zone.accent}55`, background: `${zone.accent}15` }}>
           {task.area}

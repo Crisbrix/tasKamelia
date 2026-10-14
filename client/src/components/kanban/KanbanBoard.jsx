@@ -4,7 +4,7 @@ import { STATUSES } from '../../lib/constants';
 import { Column } from './Column';
 import { TaskCardView } from './TaskCard';
 
-export function KanbanBoard({ tasks, user, flashId, onMove, onRate }) {
+export function KanbanBoard({ tasks, user, flashId, onMove, onRate, onEdit, onDelete }) {
   const [activeTask, setActiveTask] = useState(null);
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -39,6 +39,8 @@ export function KanbanBoard({ tasks, user, flashId, onMove, onRate }) {
             user={user}
             flashId={flashId}
             onRate={onRate}
+            onEdit={onEdit}
+            onDelete={onDelete}
           />
         ))}
       </div>

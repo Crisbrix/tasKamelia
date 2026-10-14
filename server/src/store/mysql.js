@@ -141,6 +141,11 @@ export async function createMysqlStore() {
       return res.affectedRows > 0;
     },
 
+    async deleteTask(id) {
+      const [res] = await pool.query('DELETE FROM tasks WHERE id = ?', [id]);
+      return res.affectedRows > 0;
+    },
+
     async listTasks({ zone, area } = {}) {
       const where = [];
       const params = [];

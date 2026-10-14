@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Loader2, Plus } from 'lucide-react';
+import { Loader2, Pencil, Plus } from 'lucide-react';
 import { api } from '../../lib/api';
 import { PRIORITIES, ZONES } from '../../lib/constants';
 import { useToast } from '../ui/Toast';
@@ -9,30 +9,48 @@ import { Modal } from '../ui/Modal';
 
 const EMPTY = { title: '', description: '', area: '', assigneeId: '', priority: 'media' };
 
-export function TaskModal({ open, onClose, zone, defaultArea, staff, onCreated }) {
+export function TaskModal({ open, onClose, zone, defaultArea, staff, task, onSaved }) {
   const toast = useToast();
   const zoneInfo = ZONES[zone];
+  const editing = Boolean(task);
   const [form, setForm] = useState(EMPTY);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (open) setForm({ ...EMPTY, area: defaultArea || zoneInfo.areas[0] });
-  }, [open, zone, defaultArea]);
+    if (!open) return;
+    if (task) {
+      setForm({
+        title: task.title || '',
+        description: task.description || '',
+        area: task.area || zoneInfo.areas[0],
+        assigneeId: task.assigneeId ? String(task.assigneeId) : '',
+        priority: task.priority || 'media',
+      });
+    } else {
+      setForm({ ...EMPTY, area: defaultArea || zoneInfo.areas[0] });
+    }
+  }, [open, zone, defaultArea, task]);
 
   const submit = async (e) => {
     e.preventDefault();
     setLoading(true);
     try {
-      const created = await api.createTask({
+      const payload = {
         title: form.title.trim(),
         description: form.description.trim(),
-        zone,
         area: form.area,
         priority: form.priority,
         assigneeId: form.assigneeId ? Number(form.assigneeId) : null,
-      });
-      toast.push(`Tarea creada en ${zoneInfo.label}`, 'success');
-      onCreated?.(created);
+      };
+      let saved;
+      if (editing) {
+        saved = await api.updateTask(task.id, payload);
+        toast.push(`"${saved.title}" actualizada`, 'success');
+      } else {
+        saved = await api.createTask({ ...payload, zone });
+        toast.push(`Tarea creada en ${zoneInfo.label}`, 'success');
+      }
+      onSaved?.(saved, editing);
       onClose();
     } catch (err) {
       toast.push(err.message, 'error');
@@ -45,7 +63,7 @@ export function TaskModal({ open, onClose, zone, defaultArea, staff, onCreated }
     <Modal
       open={open}
       onClose={onClose}
-      title="Nueva tarea"
+      title={editing ? 'Editar tarea' : 'Nueva tarea'}
       subtitle={`${zoneInfo.label} · ${zoneInfo.subtitle}`}
     >
       <form onSubmit={submit} className="space-y-4">
@@ -103,8 +121,8 @@ export function TaskModal({ open, onClose, zone, defaultArea, staff, onCreated }
             Cancelar
           </Button>
           <Button type="submit" disabled={loading || !form.title.trim()}>
-            {loading ? <Loader2 size={15} className="animate-spin" /> : <Plus size={15} />}
-            Crear tarea
+            {loading ? <Loader2 size={15} className="animate-spin" /> : editing ? <Pencil size={15} /> : <Plus size={15} />}
+            {editing ? 'Guardar cambios' : 'Crear tarea'}
           </Button>
         </div>
       </form>

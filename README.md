@@ -175,6 +175,7 @@ task/
 | GET | `/api/tasks?zone=&area=` | ✓ | tareas con rating embebido |
 | POST | `/api/tasks` | ✓ | solo jefe de zona/gerente |
 | PATCH | `/api/tasks/:id` | ✓ | mover entre columnas, reasignar |
+| DELETE | `/api/tasks/:id` | ✓ | `canDeleteTask`: Gerente todo; gestores solo en sus zonas |
 | POST | `/api/tasks/:id/rate` | ✓ | estrellas 1–5, solo Auditor/Gerente en Cocina/Finca |
 | GET | `/api/overview` | ✓ | métricas por zona |
 
@@ -183,5 +184,5 @@ task/
 ## Verificación
 
 - `npm run build --prefix client` → build de producción OK.
-- `npm test` → suite E2E (`scripts/rbac-test.mjs`), 31 aserciones, ejecutable de forma repetida.
+- `npm test` → suite E2E (`scripts/rbac-test.mjs`), 40 aserciones, ejecutable de forma repetida.
 - Flujos de navegador verificados con automatización (drag Por Hacer→Haciendo con PATCH 200; CRUD de usuarios por rol; consola sin errores).

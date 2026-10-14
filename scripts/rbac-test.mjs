@@ -209,6 +209,34 @@ check('Nadie puede eliminarse a sí mismo (403)', selfDelete.status === 403, `st
 const gone = await call(gerente.token, 'DELETE', `/users/${c1.data.id}`);
 check('Eliminar dos veces devuelve 404', gone.status === 404, `status=${gone.status}`);
 
+// --- Edición y baja de tareas ---
+const editUnauth = await call(null, 'PATCH', `/tasks/${createTask.data.id}`, { title: 'X' });
+check('Editar sin token (401)', editUnauth.status === 401, `status=${editUnauth.status}`);
+
+const chefEditsOwn = await call(chef.token, 'PATCH', `/tasks/${createTask.data.id}`, { title: `Tarea E2E ${TS} (editada)`, priority: 'baja' });
+check('Chef edita tarea de Cocina', chefEditsOwn.status === 200 && chefEditsOwn.data.title.includes('(editada)'), JSON.stringify(chefEditsOwn.data?.title));
+
+const chefCantEditComedor = await call(chef.token, 'PATCH', `/tasks/${comedorTask.data.id}`, { title: 'X' });
+check('Chef NO edita tarea de Comedor (403)', chefCantEditComedor.status === 403, `status=${chefCantEditComedor.status}`);
+
+const delTaskUnauth = await call(null, 'DELETE', `/tasks/${createTask.data.id}`);
+check('Eliminar tarea sin token (401)', delTaskUnauth.status === 401, `status=${delTaskUnauth.status}`);
+
+const delTaskMissing = await call(gerente.token, 'DELETE', '/tasks/999999');
+check('Eliminar tarea inexistente (404)', delTaskMissing.status === 404, `status=${delTaskMissing.status}`);
+
+const chefCantDeleteComedorTask = await call(chef.token, 'DELETE', `/tasks/${comedorTask.data.id}`);
+check('Chef NO elimina tarea de Comedor (403)', chefCantDeleteComedorTask.status === 403, `status=${chefCantDeleteComedorTask.status}`);
+
+const auditorDeletesCocinaTask = await call(auditor.token, 'DELETE', `/tasks/${createTask.data.id}`);
+check('Auditor elimina tarea de Cocina', auditorDeletesCocinaTask.status === 200 && auditorDeletesCocinaTask.data.ok === true);
+
+const jefeDeletesComedor = await call(jefe.token, 'DELETE', `/tasks/${comedorTask.data.id}`);
+check('Jefe elimina tarea de Comedor', jefeDeletesComedor.status === 200);
+
+const goneTask = await call(gerente.token, 'DELETE', `/tasks/${comedorTask.data.id}`);
+check('Eliminar tarea dos veces devuelve 404', goneTask.status === 404, `status=${goneTask.status}`);
+
 // --- Métricas ---
 const overview = await call(auditor.token, 'GET', '/overview');
 check(

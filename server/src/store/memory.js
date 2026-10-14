@@ -143,9 +143,17 @@ export function createMemoryStore() {
       const idx = users.findIndex((u) => u.id === numericId);
       if (idx === -1) return false;
       users.splice(idx, 1);
-      for (const task of tasks) {
-        if (task.assigneeId === numericId) task.assigneeId = null;
-      }
+      for (const task of tasks) if (task.assigneeId === numericId) task.assigneeId = null;
+      return true;
+    },
+
+    deleteTask(id) {
+      const numericId = Number(id);
+      const idx = tasks.findIndex((t) => t.id === numericId);
+      if (idx === -1) return false;
+      tasks.splice(idx, 1);
+      const rIdx = ratings.findIndex((r) => r.taskId === numericId);
+      if (rIdx !== -1) ratings.splice(rIdx, 1);
       return true;
     },
 

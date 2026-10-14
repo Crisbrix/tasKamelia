@@ -23,6 +23,7 @@ export function BoardPage({ user }) {
   const [area, setArea] = useState(ZONES.cocina.areas[0]);
   const [flashId, setFlashId] = useState(null);
   const [taskModal, setTaskModal] = useState(false);
+  const [editingTask, setEditingTask] = useState(null);
   const [teamOpen, setTeamOpen] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -108,6 +109,19 @@ export function BoardPage({ user }) {
     }
   };
 
+  const handleDelete = async (task) => {
+    const previous = tasks;
+    setTasks((list) => list.filter((t) => t.id !== task.id));
+    try {
+      await api.deleteTask(task.id);
+      toast.push(`"${task.title}" eliminada`, 'success');
+      loadOverview();
+    } catch (err) {
+      setTasks(previous);
+      toast.push(err.message, 'error');
+    }
+  };
+
   const showTeam = canManageUsers(user, zoneId);
   const showCreate = canCreateTask(user, zoneId);
 
@@ -122,7 +136,13 @@ export function BoardPage({ user }) {
             </Button>
           )}
           {showCreate && (
-            <Button size="md" onClick={() => setTaskModal(true)}>
+            <Button
+              size="md"
+              onClick={() => {
+                setEditingTask(null);
+                setTaskModal(true);
+              }}
+            >
               <Plus size={15} /> Nueva tarea
             </Button>
           )}
@@ -211,6 +231,11 @@ export function BoardPage({ user }) {
               flashId={flashId}
               onMove={handleMove}
               onRate={handleRate}
+              onEdit={(task) => {
+                setEditingTask(task);
+                setTaskModal(true);
+              }}
+              onDelete={handleDelete}
             />
           )}
         </motion.div>
@@ -218,12 +243,17 @@ export function BoardPage({ user }) {
 
       <TaskModal
         open={taskModal}
-        onClose={() => setTaskModal(false)}
+        onClose={() => {
+          setTaskModal(false);
+          setEditingTask(null);
+        }}
         zone={zoneId}
         defaultArea={area}
         staff={staff}
-        onCreated={(task) => {
-          setTasks((list) => [...list, task]);
+        task={editingTask}
+        onSaved={(saved, wasEditing) => {
+          setTasks((list) => (wasEditing ? list.map((t) => (t.id === saved.id ? saved : t)) : [...list, saved]));
+          setEditingTask(null);
           loadOverview();
         }}
       />
