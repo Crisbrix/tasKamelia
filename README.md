@@ -102,7 +102,7 @@ Cubre: JWT/401, creación y eliminación de usuarios por rol (403 cruzados, 404,
 
 ### 2. Manual en el navegador
 
-Abre <http://localhost:5173> y recorre estos casos (entra como `kamelia@gmail.com` / `kamelia2026` y crea cada rol desde **Personal**):
+Abre <http://localhost:5173> e ingresa con tu cuenta (la pantalla de login no muestra accesos rápidos por seguridad).
 
 | # | Rol | Qué verificar |
 | --- | --- | --- |
@@ -114,8 +114,6 @@ Abre <http://localhost:5173> y recorre estos casos (entra como `kamelia@gmail.co
 | 6 | Gerente | Menú **Personal → Directorio** → dropdown de rol + zona + estación; crea usuarios de cualquier rol y filtra el directorio |
 | 7 | Cualquiera | Cambia de pestaña → transición con blur/spring; el contador ámbar marca tareas sin revisar |
 | 11 | Cualquiera | Botón ☀/🌙 en el header → modo claro con tarjetas blancas y mismo contraste; la elección persiste al recargar |
-
-Acceso rápido en el login con la cuenta de Vanesa Diaz (`kamelia@gmail.com` / `kamelia2026`).
 
 ### 3. Producción
 

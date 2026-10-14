@@ -2,16 +2,10 @@ import { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Loader2, Lock, Mail, ShieldCheck } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { useTheme } from '../context/ThemeContext';
-import { accentText } from '../lib/theme';
 import { Button } from './ui/Button';
-import { ROLES } from '../lib/constants';
-
-const DEMO = [{ email: 'kamelia@gmail.com', password: 'kamelia2026', role: 'gerente' }];
 
 export function Login() {
   const { login } = useAuth();
-  const { isLight } = useTheme();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -28,12 +22,6 @@ export function Login() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const fill = (mail, pwd) => {
-    setEmail(mail);
-    setPassword(pwd || 'kamelia123');
-    setError('');
   };
 
   return (
@@ -110,31 +98,6 @@ export function Login() {
             {loading ? 'Verificando…' : 'Ingresar al tablero'}
           </Button>
         </form>
-
-        <div className="mt-6">
-          <p className="mb-2 text-[11px] font-bold uppercase tracking-widest text-zinc-500">
-            Acceso · Gerente
-          </p>
-          <div className="grid grid-cols-2 gap-2">
-            {DEMO.map((d) => {
-              const role = ROLES[d.role];
-              return (
-                <motion.button
-                  key={d.email}
-                  type="button"
-                  whileHover={{ scale: 1.02, y: -1 }}
-                  whileTap={{ scale: 0.98 }}
-                  transition={{ type: 'spring', stiffness: 420, damping: 28 }}
-                  onClick={() => fill(d.email, d.password)}
-                  className="rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-left text-xs font-semibold text-zinc-300 transition hover:border-white/25 hover:text-white light:border-black/10 light:bg-white light:text-zinc-700 light:hover:border-black/25 light:hover:text-zinc-900"
-                >
-                  <span className="block" style={{ color: accentText(role.color, isLight) }}>{role.label}</span>
-                  <span className="block truncate text-[10px] font-medium text-zinc-500">{d.email}</span>
-                </motion.button>
-              );
-            })}
-          </div>
-        </div>
       </motion.div>
     </div>
   );
