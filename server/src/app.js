@@ -3,6 +3,8 @@ import cors from 'cors';
 import { config } from './config.js';
 import { initStore, getStore } from './store/index.js';
 import { requireAuth, asyncHandler } from './auth.js';
+import { canListUsers, HttpError } from './rbac.js';
+import { ZONES } from './constants.js';
 import { authRouter } from './routes/auth.js';
 import { usersRouter } from './routes/users.js';
 import { tasksRouter } from './routes/tasks.js';
@@ -25,6 +27,28 @@ app.get(
   asyncHandler(async (req, res) => {
     const { zones, users, tasks } = await getStore().overview();
     res.json({ zones, users, tasks });
+  }),
+);
+
+/** Tablero completo de una zona en una sola respuesta: tareas + personal + métricas. */
+app.get(
+  '/api/board',
+  requireAuth,
+  asyncHandler(async (req, res) => {
+    const { zone } = req.query;
+    if (zone && !ZONES[zone]) throw new HttpError(400, 'Zona no reconocida', 'validation');
+    const store = getStore();
+    const [tasks, staff, { zones }] = await Promise.all([
+      store.listTasks({ zone }),
+      (async () => {
+        if (!zone || !canListUsers(req.user, zone)) return [];
+        const list = await store.listUsers({ zone });
+        if (req.user.role !== 'gerente') return list.filter((u) => u.zone === req.user.zone);
+        return list;
+      })(),
+      store.overview(),
+    ]);
+    res.json({ tasks, staff, zones });
   }),
 );
 

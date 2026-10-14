@@ -5,7 +5,7 @@ import { api } from '../lib/api';
 import { ZONES } from '../lib/constants';
 import { accentText } from '../lib/theme';
 import { useTheme } from '../context/ThemeContext';
-import { canCreateTask, canManageZone, canManageUsers, canListUsers } from '../lib/permissions';
+import { canCreateTask, canManageZone, canManageUsers } from '../lib/permissions';
 import { useToast } from '../components/ui/Toast';
 import { Button } from '../components/ui/Button';
 import { ZoneTabs, StatsBar } from '../components/ZoneTabs';
@@ -37,29 +37,23 @@ export function BoardPage({ user }) {
     async (z) => {
       setLoading(true);
       try {
-        const [taskList, staffList] = await Promise.all([
-          api.tasks({ zone: z }),
-          canListUsers(user, z) ? api.users({ zone: z }) : Promise.resolve([]),
-        ]);
-        setTasks(taskList);
-        setStaff(staffList);
+        const data = await api.board({ zone: z });
+        setTasks(data.tasks);
+        setStaff(data.staff);
+        setOverview((prev) => ({ ...(prev || {}), zones: data.zones }));
       } catch (err) {
         toast.push(err.message, 'error');
       } finally {
         setLoading(false);
       }
     },
-    [toast, user],
+    [toast],
   );
 
   useEffect(() => {
     loadZone(zoneId);
     setArea(ZONES[zoneId].areas[0]);
   }, [zoneId, loadZone]);
-
-  useEffect(() => {
-    loadOverview();
-  }, [loadOverview]);
 
   const visibleTasks = useMemo(() => tasks.filter((t) => t.area === area), [tasks, area]);
   const countByArea = useMemo(() => {
@@ -149,7 +143,7 @@ export function BoardPage({ user }) {
         </div>
       </div>
 
-      <AnimatePresence mode="wait">
+      <AnimatePresence initial={false}>
         <motion.div
           key={zoneId}
           initial={{ opacity: 0, y: 14 }}

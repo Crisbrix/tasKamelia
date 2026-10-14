@@ -214,20 +214,24 @@ export async function createMysqlStore() {
     },
 
     async overview() {
-      const [statRows] = await pool.query(
-        `SELECT zone, status, COUNT(*) AS total FROM tasks GROUP BY zone, status`,
-      );
-      const [ratingRows] = await pool.query(
-        `SELECT t.zone, AVG(r.stars) AS avg_stars, COUNT(r.id) AS rated
-         FROM ratings r JOIN tasks t ON t.id = r.task_id GROUP BY t.zone`,
-      );
-      const [doneRows] = await pool.query(
-        `SELECT t.zone, SUM(r.id IS NULL) AS pending FROM tasks t LEFT JOIN ratings r ON r.task_id = t.id
-         WHERE t.status = 'done' GROUP BY t.zone`,
-      );
-      const [pendingTasks] = await pool.query(`SELECT zone, COUNT(*) AS total FROM tasks GROUP BY zone`);
-      const [staffRows] = await pool.query(`SELECT zone, COUNT(*) AS total FROM users WHERE zone IS NOT NULL GROUP BY zone`);
-      const [counts] = await pool.query(`SELECT (SELECT COUNT(*) FROM users) AS users, (SELECT COUNT(*) FROM tasks) AS tasks`);
+      const [statRows, ratingRows, doneRows, pendingTasks, staffRows, counts] = await Promise.all([
+        pool.query(`SELECT zone, status, COUNT(*) AS total FROM tasks GROUP BY zone, status`).then(([r]) => r),
+        pool
+          .query(
+            `SELECT t.zone, AVG(r.stars) AS avg_stars, COUNT(r.id) AS rated
+             FROM ratings r JOIN tasks t ON t.id = r.task_id GROUP BY t.zone`,
+          )
+          .then(([r]) => r),
+        pool
+          .query(
+            `SELECT t.zone, SUM(r.id IS NULL) AS pending FROM tasks t LEFT JOIN ratings r ON r.task_id = t.id
+             WHERE t.status = 'done' GROUP BY t.zone`,
+          )
+          .then(([r]) => r),
+        pool.query(`SELECT zone, COUNT(*) AS total FROM tasks GROUP BY zone`).then(([r]) => r),
+        pool.query(`SELECT zone, COUNT(*) AS total FROM users WHERE zone IS NOT NULL GROUP BY zone`).then(([r]) => r),
+        pool.query(`SELECT (SELECT COUNT(*) FROM users) AS users, (SELECT COUNT(*) FROM tasks) AS tasks`).then(([r]) => r),
+      ]);
 
       const zones = {};
       for (const zone of ['cocina', 'finca', 'comedor']) {

@@ -40,6 +40,10 @@ export const api = {
   login: (email, password) => request('/auth/login', { method: 'POST', body: { email, password } }),
   me: () => request('/auth/me'),
   overview: () => request('/overview'),
+  board: (params = {}) => {
+    const q = new URLSearchParams(params).toString();
+    return request(`/board${q ? `?${q}` : ''}`);
+  },
   users: (params = {}) => {
     const q = new URLSearchParams(params).toString();
     return request(`/users${q ? `?${q}` : ''}`);

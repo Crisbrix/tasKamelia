@@ -67,7 +67,7 @@ export function UsersPage({ user }) {
         </div>
       </div>
 
-      <AnimatePresence mode="wait">
+      <AnimatePresence initial={false}>
         <motion.div
           key={tab}
           initial={{ opacity: 0, y: 12 }}

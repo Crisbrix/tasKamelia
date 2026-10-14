@@ -175,6 +175,8 @@ task/
 | PATCH | `/api/tasks/:id` | ✓ | mover entre columnas, reasignar |
 | DELETE | `/api/tasks/:id` | ✓ | `canDeleteTask`: Gerente todo; gestores solo en sus zonas |
 | POST | `/api/tasks/:id/rate` | ✓ | estrellas 1–5, solo Auditor/Gerente en Cocina/Finca |
+| GET | `/api/overview` | ✓ | métricas por zona (queries en paralelo) |
+| GET | `/api/board?zone=` | ✓ | tablero completo en 1 sola petición: tareas + personal + métricas |
 | GET | `/api/overview` | ✓ | métricas por zona |
 
 ---

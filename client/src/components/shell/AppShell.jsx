@@ -148,7 +148,7 @@ export function AppShell() {
       </motion.header>
 
       <main className="mx-auto max-w-[1400px] px-4 py-6 sm:px-6 sm:py-8">
-        <AnimatePresence mode="wait">
+        <AnimatePresence initial={false}>
           <motion.div
             key={page}
             initial={{ opacity: 0, y: 16 }}
