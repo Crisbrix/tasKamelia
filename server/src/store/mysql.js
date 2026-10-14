@@ -252,12 +252,11 @@ async function seed(pool) {
   const [[{ n }]] = await pool.query('SELECT COUNT(*) AS n FROM users');
   if (Number(n) > 0) return;
 
-  const hash = bcrypt.hashSync(SEED_PASSWORD, 10);
   const ids = new Map();
   for (const u of seedUsers) {
     const [res] = await pool.query(
       'INSERT INTO users (name, email, password_hash, role, zone, station) VALUES (?, ?, ?, ?, ?, ?)',
-      [u.name, u.email, hash, u.role, u.zone, u.station],
+      [u.name, u.email, bcrypt.hashSync(u.password || SEED_PASSWORD, 10), u.role, u.zone, u.station],
     );
     ids.set(u.email, res.insertId);
   }

@@ -7,12 +7,7 @@ import { accentText } from '../lib/theme';
 import { Button } from './ui/Button';
 import { ROLES } from '../lib/constants';
 
-const DEMO = [
-  { email: 'gerente@kamelia.com', role: 'gerente' },
-  { email: 'auditor@kamelia.com', role: 'auditor' },
-  { email: 'chef@kamelia.com', role: 'chef' },
-  { email: 'jefe.meseros@kamelia.com', role: 'jefe_meseros' },
-];
+const DEMO = [{ email: 'kamelia@gmail.com', password: 'kamelia2026', role: 'gerente' }];
 
 export function Login() {
   const { login } = useAuth();
@@ -35,9 +30,9 @@ export function Login() {
     }
   };
 
-  const fill = (mail) => {
+  const fill = (mail, pwd) => {
     setEmail(mail);
-    setPassword('kamelia123');
+    setPassword(pwd || 'kamelia123');
     setError('');
   };
 
@@ -118,7 +113,7 @@ export function Login() {
 
         <div className="mt-6">
           <p className="mb-2 text-[11px] font-bold uppercase tracking-widest text-zinc-500">
-            Accesos demo · contraseña kamelia123
+            Acceso · Gerente
           </p>
           <div className="grid grid-cols-2 gap-2">
             {DEMO.map((d) => {
@@ -130,7 +125,7 @@ export function Login() {
                   whileHover={{ scale: 1.03, y: -2 }}
                   whileTap={{ scale: 0.97 }}
                   transition={{ type: 'spring', stiffness: 480, damping: 26 }}
-                  onClick={() => fill(d.email)}
+                  onClick={() => fill(d.email, d.password)}
                   className="rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-left text-xs font-semibold text-zinc-300 transition hover:border-white/25 hover:text-white light:border-black/10 light:bg-white light:text-zinc-700 light:hover:border-black/25 light:hover:text-zinc-900"
                 >
                   <span className="block" style={{ color: accentText(role.color, isLight) }}>{role.label}</span>

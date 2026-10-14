@@ -47,14 +47,12 @@ export function createMemoryStore() {
   const users = [];
   const tasks = [];
   const ratings = [];
-  const hash = bcrypt.hashSync(SEED_PASSWORD, 10);
-
   for (const u of seedUsers) {
     users.push({
       id: nextUserId++,
       name: u.name,
       email: u.email,
-      passwordHash: hash,
+      passwordHash: bcrypt.hashSync(u.password || SEED_PASSWORD, 10),
       role: u.role,
       zone: u.zone,
       station: u.station,

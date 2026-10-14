@@ -29,14 +29,13 @@ npm run dev              # levanta API (:4000) y Vite (:5173) en paralelo
 - App: <http://localhost:5173>
 - API: <http://localhost:4000/api/health>
 
-### Credenciales demo (contraseña `kamelia123`)
+### Credenciales
 
-| Rol | Correo |
-| --- | --- |
-| Gerente (Super Admin) | `gerente@kamelia.com` |
-| Auditor | `auditor@kamelia.com` |
-| Chef (Cocina) | `chef@kamelia.com` |
-| Jefe de Meseros (Comedor) | `jefe.meseros@kamelia.com` |
+| Rol | Correo | Contraseña |
+| --- | --- | --- |
+| Gerente (Super Admin) | `kamelia@gmail.com` (Vanesa Diaz) | `kamelia2026` |
+
+Los demás roles (Auditor, Chef, Jefe de Meseros, personal) se crean desde el módulo **Personal**. Si la base de datos está vacía, la app siembra únicamente esta cuenta.
 
 ### Conectar TiDB (opcional)
 
@@ -80,8 +79,7 @@ Los componentes de calificación y de creación de usuarios quedan **envueltos p
 1. **Cocina (prioridad máxima)** — sub-pestañas por área (*Mise en place, Neveras, Aseo, Picado*), cada una con su propio Kanban: las áreas no comparten tareas.
    Chef crea personal/tarea → el personal arrastra a **Hecho** → se desbloquea el **Star Rating** para Auditor/Gerente.
 2. **Finca (mantenimiento y aseo)** — gestión exclusiva del **Auditor**: crea encargados, asigna trabajos y los califica al pasar a "Hecho".
-3. **Comedor (servicio)** — personal predefinido en el seed:
-   Derecho (Esteban), Izquierdo (Johan), Palco y Chalet (Nicolás), Envase (Camilo), Reciclaje (Sebastian), Carritos (Andrés, Juan Camilo), Servilletero (Holman, Santiago). El **Jefe de Meseros** lo gestiona.
+3. **Comedor (servicio)** — estaciones: Derecho, Izquierdo, Palco y Chalet, Envase, Reciclaje, Carritos, Servilletero. El **Jefe de Meseros** crea y gestiona al personal de servicio.
 
 ---
 
@@ -104,20 +102,20 @@ Cubre: JWT/401, creación y eliminación de usuarios por rol (403 cruzados, 404,
 
 ### 2. Manual en el navegador
 
-Abre <http://localhost:5173> y recorre estos casos:
+Abre <http://localhost:5173> y recorre estos casos (entra como `kamelia@gmail.com` / `kamelia2026` y crea cada rol desde **Personal**):
 
 | # | Rol | Qué verificar |
 | --- | --- | --- |
-| 1 | Chef | Pestaña **Cocina** → botón *Nueva tarea* y *Personal* visibles; arrastra una tarjeta a **Hecho** → micro-feedback (anillo verde + check) |
+| 1 | Chef | Pestaña **Cocina** → botón *Nueva tarea* y *Personal* visibles; crea personal y tareas; arrastra una tarjeta a **Hecho** → micro-feedback (anillo verde + check) |
 | 2 | Chef | En tarjetas "Hecho" de Cocina aparece **"Pendiente"** con candado (no puedes calificar) |
-| 3 | Auditor | Entra a **Cocina**, tarjeta "Hecho" → las 5 estrellas se activan; al puntuar aparece toast ámbar y badge "por Andrea Ríos" |
+| 3 | Auditor | Entra a **Cocina**, tarjeta "Hecho" → las 5 estrellas se activan; al puntuar aparece toast ámbar y badge con tu nombre |
 | 4 | Auditor | Pestaña **Finca** → crea encargados desde *Personal*, asigna tarea y califícala al pasarla a Hecho |
-| 5 | Jefe de Meseros | **Comedor** con el personal mock (Esteban, Johan, Nicolás…); *Nueva tarea* y *Personal* visibles; las tarjetas Hecho **no** muestran estrellas |
-| 6 | Gerente | Menú **Usuarios** → dropdown de rol + zona + estación; crea usuarios de cualquier rol y filtra el directorio |
+| 5 | Jefe de Meseros | **Comedor**: conforma el personal por estación (Derecho, Izquierdo, Palco y Chalet, Envase, Reciclaje, Carritos, Servilletero); las tarjetas Hecho **no** muestran estrellas |
+| 6 | Gerente | Menú **Personal → Directorio** → dropdown de rol + zona + estación; crea usuarios de cualquier rol y filtra el directorio |
 | 7 | Cualquiera | Cambia de pestaña → transición con blur/spring; el contador ámbar marca tareas sin revisar |
 | 11 | Cualquiera | Botón ☀/🌙 en el header → modo claro con tarjetas blancas y mismo contraste; la elección persiste al recargar |
 
-Contraseñas: `kamelia123` (botones de acceso rápido en la pantalla de login).
+Acceso rápido en el login con la cuenta de Vanesa Diaz (`kamelia@gmail.com` / `kamelia2026`).
 
 ### 3. Producción
 
@@ -184,5 +182,5 @@ task/
 ## Verificación
 
 - `npm run build --prefix client` → build de producción OK.
-- `npm test` → suite E2E (`scripts/rbac-test.mjs`), 40 aserciones, ejecutable de forma repetida.
+- `npm test` → suite E2E (`scripts/rbac-test.mjs`), 43 aserciones, ejecutable de forma repetida.
 - Flujos de navegador verificados con automatización (drag Por Hacer→Haciendo con PATCH 200; CRUD de usuarios por rol; consola sin errores).

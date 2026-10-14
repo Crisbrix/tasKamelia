@@ -12,7 +12,9 @@ export const app = express();
 app.use(cors({ origin: config.corsOrigin }));
 app.use(express.json({ limit: '1mb' }));
 
-app.get('/api/health', (req, res) => res.json({ ok: true, store: getStore().mode }));
+app.get('/api/health', (req, res) =>
+  res.json({ ok: true, store: getStore().mode, dbConfigured: config.db.enabled }),
+);
 app.use('/api/auth', authRouter);
 app.use('/api/users', requireAuth, usersRouter);
 app.use('/api/tasks', requireAuth, tasksRouter);

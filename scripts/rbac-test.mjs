@@ -46,11 +46,30 @@ async function call(token, method, path, body) {
 
 console.log(`\nAPI: ${BASE}\n`);
 
-const gerente = await login('gerente@kamelia.com');
-const auditor = await login('auditor@kamelia.com');
-const chef = await login('chef@kamelia.com');
-const jefe = await login('jefe.meseros@kamelia.com');
-check('Login + JWT emitido para los 4 roles base', Boolean(gerente.token && auditor.token && chef.token && jefe.token));
+const gerente = await login('kamelia@gmail.com', 'kamelia2026');
+check('Login Gerente (Vanesa Diaz) + JWT', Boolean(gerente.token) && gerente.user?.role === 'gerente');
+
+const mkRole = async (name, role, zone) => {
+  const res = await call(gerente.token, 'POST', '/users', {
+    name,
+    email: tmp(role),
+    password: 'secret123',
+    role,
+    ...(zone ? { zone } : {}),
+  });
+  return res;
+};
+const mkAuditor = await mkRole('Auditor Test', 'auditor');
+const mkChef = await mkRole('Chef Test', 'chef', 'cocina');
+const mkJefe = await mkRole('Jefe Test', 'jefe_meseros', 'comedor');
+check(
+  'Gerente crea cuentas de prueba (auditor/chef/jefe)',
+  mkAuditor.status === 201 && mkChef.status === 201 && mkJefe.status === 201,
+);
+const auditor = await login(mkAuditor.data.email, 'secret123');
+const chef = await login(mkChef.data.email, 'secret123');
+const jefe = await login(mkJefe.data.email, 'secret123');
+check('Login + JWT de los roles creados', Boolean(auditor.token && chef.token && jefe.token));
 
 const noAuth = await call(null, 'GET', '/tasks?zone=cocina');
 check('401 sin token', noAuth.status === 401);
@@ -124,10 +143,10 @@ check('Auditor SI puede crear personal de Cocina', a3.status === 201, JSON.strin
 
 // --- Lectura de tareas por zona ---
 const tasksCocina = await call(auditor.token, 'GET', '/tasks?zone=cocina');
-check('Auditor ve tareas de Cocina', tasksCocina.status === 200 && tasksCocina.data.length > 0);
+check('Auditor lista tareas de Cocina', tasksCocina.status === 200 && Array.isArray(tasksCocina.data));
 
 const comedorTasks = await call(jefe.token, 'GET', '/tasks?zone=comedor');
-check('Jefe ve tareas de Comedor (mock)', comedorTasks.status === 200 && comedorTasks.data.length > 0);
+check('Jefe lista tareas de Comedor', comedorTasks.status === 200 && Array.isArray(comedorTasks.data));
 
 // --- Alta de tareas y validación de áreas ---
 const createTask = await call(chef.token, 'POST', '/tasks', {
@@ -244,6 +263,12 @@ check(
   overview.status === 200 && Boolean(overview.data.zones?.cocina),
   JSON.stringify(overview.data),
 );
+
+// --- Limpieza de cuentas de prueba ---
+const clean = await Promise.all(
+  [mkAuditor.data.id, mkChef.data.id, mkJefe.data.id].map((id) => call(gerente.token, 'DELETE', `/users/${id}`)),
+);
+check('Limpieza de cuentas de prueba', clean.every((r) => r.status === 200));
 
 console.log(`\nResultado: ${pass} pass, ${fail} fail\n`);
 process.exit(fail ? 1 : 0);
