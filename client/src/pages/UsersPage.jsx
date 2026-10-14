@@ -67,7 +67,7 @@ export function UsersPage({ user }) {
         </div>
       </div>
 
-      <AnimatePresence initial={false}>
+      <AnimatePresence initial={false} mode="popLayout">
         <motion.div
           key={tab}
           initial={{ opacity: 0, y: 12 }}

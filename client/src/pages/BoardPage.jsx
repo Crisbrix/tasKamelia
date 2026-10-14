@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Plus, ShieldHalf, Users } from 'lucide-react';
 import { api } from '../lib/api';
@@ -17,8 +17,7 @@ export function BoardPage({ user }) {
   const toast = useToast();
   const { isLight } = useTheme();
   const [zoneId, setZoneId] = useState('cocina');
-  const [tasks, setTasks] = useState([]);
-  const [staff, setStaff] = useState([]);
+  const [cache, setCache] = useState({});
   const [overview, setOverview] = useState(null);
   const [area, setArea] = useState(ZONES.cocina.areas[0]);
   const [flashId, setFlashId] = useState(null);
@@ -26,6 +25,8 @@ export function BoardPage({ user }) {
   const [editingTask, setEditingTask] = useState(null);
   const [teamOpen, setTeamOpen] = useState(false);
   const [loading, setLoading] = useState(true);
+  const versionRef = useRef({});
+  const loadedRef = useRef({});
 
   const zone = ZONES[zoneId];
 
@@ -33,43 +34,58 @@ export function BoardPage({ user }) {
     api.overview().then(setOverview).catch(() => {});
   }, []);
 
+  const patchZone = useCallback((z, patch) => {
+    setCache((c) => ({ ...c, [z]: { tasks: [], staff: [], ...(c[z] || {}), ...patch } }));
+  }, []);
+
   const loadZone = useCallback(
-    async (z) => {
-      setLoading(true);
+    async (z, { silent = false } = {}) => {
+      const v = (versionRef.current[z] || 0) + 1;
+      versionRef.current[z] = v;
+      if (!silent) setLoading(true);
       try {
         const data = await api.board({ zone: z });
-        setTasks(data.tasks);
-        setStaff(data.staff);
+        if (versionRef.current[z] !== v) return;
+        loadedRef.current[z] = true;
+        setCache((c) => ({ ...c, [z]: { tasks: data.tasks, staff: data.staff } }));
         setOverview((prev) => ({ ...(prev || {}), zones: data.zones }));
       } catch (err) {
-        toast.push(err.message, 'error');
+        if (versionRef.current[z] === v) toast.push(err.message || 'Error al cargar la zona', 'error');
       } finally {
-        setLoading(false);
+        if (versionRef.current[z] === v && !silent) setLoading(false);
       }
     },
     [toast],
   );
 
   useEffect(() => {
-    loadZone(zoneId);
+    loadZone('cocina').finally(() => {
+      for (const z of ['finca', 'comedor']) loadZone(z, { silent: true });
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
     setArea(ZONES[zoneId].areas[0]);
+    loadZone(zoneId, { silent: Boolean(loadedRef.current[zoneId]) });
   }, [zoneId, loadZone]);
 
-  const visibleTasks = useMemo(() => tasks.filter((t) => t.area === area), [tasks, area]);
+  const zoneCache = cache[zoneId] || { tasks: [], staff: [] };
+  const visibleTasks = useMemo(() => zoneCache.tasks.filter((t) => t.area === area), [zoneCache.tasks, area]);
   const countByArea = useMemo(() => {
     const map = {};
-    for (const t of tasks) map[t.area] = (map[t.area] || 0) + 1;
+    for (const t of zoneCache.tasks) map[t.area] = (map[t.area] || 0) + 1;
     return map;
-  }, [tasks]);
+  }, [zoneCache.tasks]);
 
   const handleMove = async (task, status) => {
     if (task.status === status) return;
-    const previous = tasks;
-    setTasks((list) =>
-      list.map((t) =>
+    const previous = zoneCache.tasks;
+    patchZone(zoneId, {
+      tasks: previous.map((t) =>
         t.id === task.id ? { ...t, status, completedAt: status === 'done' ? new Date().toISOString() : null } : t,
       ),
-    );
+    });
 
     if (status === 'done' && task.status !== 'done') {
       setFlashId(task.id);
@@ -84,10 +100,10 @@ export function BoardPage({ user }) {
 
     try {
       const updated = await api.updateTask(task.id, { status });
-      setTasks((list) => list.map((t) => (t.id === task.id ? updated : t)));
+      patchZone(zoneId, { tasks: zoneCache.tasks.map((t) => (t.id === task.id ? updated : t)) });
       loadOverview();
     } catch (err) {
-      setTasks(previous);
+      patchZone(zoneId, { tasks: previous });
       toast.push(err.message, 'error');
     }
   };
@@ -95,7 +111,7 @@ export function BoardPage({ user }) {
   const handleRate = async (task, stars) => {
     try {
       const updated = await api.rateTask(task.id, stars);
-      setTasks((list) => list.map((t) => (t.id === task.id ? updated : t)));
+      patchZone(zoneId, { tasks: zoneCache.tasks.map((t) => (t.id === task.id ? updated : t)) });
       toast.push(`${stars} ★ asignadas a "${task.title}"`, 'audit');
       loadOverview();
     } catch (err) {
@@ -104,14 +120,14 @@ export function BoardPage({ user }) {
   };
 
   const handleDelete = async (task) => {
-    const previous = tasks;
-    setTasks((list) => list.filter((t) => t.id !== task.id));
+    const previous = zoneCache.tasks;
+    patchZone(zoneId, { tasks: previous.filter((t) => t.id !== task.id) });
     try {
       await api.deleteTask(task.id);
       toast.push(`"${task.title}" eliminada`, 'success');
       loadOverview();
     } catch (err) {
-      setTasks(previous);
+      patchZone(zoneId, { tasks: previous });
       toast.push(err.message, 'error');
     }
   };
@@ -143,7 +159,7 @@ export function BoardPage({ user }) {
         </div>
       </div>
 
-      <AnimatePresence initial={false}>
+      <AnimatePresence initial={false} mode="popLayout">
         <motion.div
           key={zoneId}
           initial={{ opacity: 0, y: 14 }}
@@ -240,10 +256,14 @@ export function BoardPage({ user }) {
         }}
         zone={zoneId}
         defaultArea={area}
-        staff={staff}
+        staff={zoneCache.staff}
         task={editingTask}
         onSaved={(saved, wasEditing) => {
-          setTasks((list) => (wasEditing ? list.map((t) => (t.id === saved.id ? saved : t)) : [...list, saved]));
+          patchZone(zoneId, {
+            tasks: wasEditing
+              ? zoneCache.tasks.map((t) => (t.id === saved.id ? saved : t))
+              : [...zoneCache.tasks, saved],
+          });
           setEditingTask(null);
           loadOverview();
         }}
@@ -254,12 +274,8 @@ export function BoardPage({ user }) {
         onClose={() => setTeamOpen(false)}
         zone={zoneId}
         user={user}
-        staff={staff}
-        onRefresh={async () => {
-          const staffList = await api.users({ zone: zoneId }).catch(() => []);
-          setStaff(staffList);
-          loadOverview();
-        }}
+        staff={zoneCache.staff}
+        onRefresh={() => loadZone(zoneId, { silent: true })}
       />
     </div>
   );

@@ -21,7 +21,7 @@ function Router() {
   }
 
   return (
-    <AnimatePresence initial={false}>
+    <AnimatePresence initial={false} mode="popLayout">
       <motion.div
         key={user ? 'shell' : 'login'}
         initial={{ opacity: 0, scale: 0.98 }}
