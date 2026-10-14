@@ -21,15 +21,15 @@ export function Column({ status, tasks, user, flashId, onRate, onEdit, onDelete 
           : undefined
       }
       animate={{ scale: isOver ? 1.012 : 1 }}
-      transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+      transition={{ type: 'spring', stiffness: 380, damping: 32 }}
     >
       <header className="mb-3 flex items-center justify-between px-1 pt-1">
         <div className="flex items-center gap-2">
           <motion.span
             className="h-2.5 w-2.5 rounded-full"
             style={{ background: status.accent, boxShadow: `0 0 12px ${status.accent}` }}
-            animate={isOver ? { scale: [1, 1.6, 1] } : { scale: 1 }}
-            transition={{ repeat: isOver ? Infinity : 0, duration: 0.9 }}
+            animate={isOver ? { scale: [1, 1.4, 1] } : { scale: 1 }}
+            transition={{ repeat: isOver ? Infinity : 0, duration: 1.6 }}
           />
           <h3 className="text-xs font-extrabold uppercase tracking-[0.18em] text-zinc-200 light:text-zinc-800">{status.label}</h3>
         </div>

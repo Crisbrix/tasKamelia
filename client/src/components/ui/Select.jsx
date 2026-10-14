@@ -44,10 +44,10 @@ export function Select({ value, onChange, options, placeholder = 'Seleccionar…
       <AnimatePresence>
         {open && (
           <motion.ul
-            initial={{ opacity: 0, y: -8, scale: 0.96 }}
+            initial={{ opacity: 0, y: -6, scale: 0.97 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -6, scale: 0.97 }}
-            transition={{ type: 'spring', stiffness: 460, damping: 30 }}
+            exit={{ opacity: 0, y: -4, scale: 0.98 }}
+            transition={{ type: 'spring', stiffness: 360, damping: 32 }}
             style={{ transformOrigin: 'top' }}
             className="menu absolute left-0 right-0 z-50 mt-2 max-h-64 overflow-y-auto p-1.5"
           >

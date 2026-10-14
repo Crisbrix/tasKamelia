@@ -19,7 +19,7 @@ export function ZoneTabs({ value, onChange, overview }) {
             {active && (
               <motion.span
                 layoutId="zone-tab-pill"
-                transition={{ type: 'spring', stiffness: 460, damping: 36 }}
+                transition={{ type: 'spring', stiffness: 320, damping: 34 }}
                 className="absolute inset-0 rounded-xl"
                 style={{
                   background: `linear-gradient(135deg, ${zone.accent}, ${zone.accent}B3)`,
@@ -30,7 +30,7 @@ export function ZoneTabs({ value, onChange, overview }) {
             {!active && (
               <motion.span
                 layoutId="zone-tab-ring"
-                transition={{ type: 'spring', stiffness: 460, damping: 36 }}
+                transition={{ type: 'spring', stiffness: 320, damping: 34 }}
                 className="absolute inset-0 rounded-xl border border-white/10 light:border-black/10"
               />
             )}
@@ -44,7 +44,7 @@ export function ZoneTabs({ value, onChange, overview }) {
                 <motion.span
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
-                  transition={{ type: 'spring', stiffness: 600, damping: 18 }}
+                  transition={{ type: 'spring', stiffness: 420, damping: 24 }}
                   className="grid h-[18px] min-w-[18px] place-items-center rounded-full bg-night-950/85 px-1.5 text-[10px] font-extrabold text-neon-amber"
                 >
                   {pending}
@@ -84,7 +84,7 @@ export function StatsBar({ zone, overview }) {
           key={item.label}
           initial={{ opacity: 0, y: 10, scale: 0.96 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
-          transition={{ type: 'spring', stiffness: 420, damping: 30, delay: i * 0.04 }}
+          transition={{ type: 'spring', stiffness: 340, damping: 32, delay: i * 0.04 }}
           className="glass flex items-center gap-2 rounded-xl px-3 py-2"
           style={item.warn ? { borderColor: 'rgba(255,196,0,0.55)', boxShadow: '0 0 24px -12px rgba(255,196,0,0.8)' } : undefined}
         >

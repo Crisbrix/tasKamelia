@@ -33,8 +33,8 @@ export function DeleteUserButton({ user, target, onDeleted }) {
     return (
       <motion.button
         type="button"
-        whileHover={{ scale: 1.12 }}
-        whileTap={{ scale: 0.88 }}
+        whileHover={{ scale: 1.08 }}
+        whileTap={{ scale: 0.92 }}
         onClick={() => {
           setConfirm(true);
           timer.current && clearTimeout(timer.current);

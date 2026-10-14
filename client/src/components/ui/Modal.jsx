@@ -21,10 +21,10 @@ export function Modal({ open, onClose, title, subtitle, children, width = 'max-w
             className="absolute inset-0 bg-black/70 backdrop-blur-md"
           />
           <motion.div
-            initial={{ opacity: 0, y: 34, scale: 0.94, rotateX: 8 }}
-            animate={{ opacity: 1, y: 0, scale: 1, rotateX: 0 }}
-            exit={{ opacity: 0, y: 18, scale: 0.96 }}
-            transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+            initial={{ opacity: 0, y: 20, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 12, scale: 0.97 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 32 }}
             className={`glass-strong relative z-10 w-full ${width} rounded-2xl p-6`}
           >
             <div className="mb-5 flex items-start justify-between gap-4">

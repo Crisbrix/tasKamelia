@@ -111,7 +111,7 @@ export function TeamPanel({ open, onClose, zone, user, staff, onRefresh }) {
                           initial={{ opacity: 0, x: 30 }}
                           animate={{ opacity: 1, x: 0 }}
                           exit={{ opacity: 0, x: 30 }}
-                          transition={{ type: 'spring', stiffness: 420, damping: 32, delay: i * 0.03 }}
+                          transition={{ type: 'spring', stiffness: 360, damping: 32, delay: i * 0.03 }}
                           className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2.5 light:border-black/10 light:bg-white"
                         >
                           <span

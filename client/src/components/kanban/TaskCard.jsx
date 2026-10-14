@@ -34,12 +34,12 @@ export function TaskCardView({ task, user, flash = false, overlay = false, dimme
   return (
     <motion.article
       layout={!overlay}
-      initial={{ opacity: 0, y: 14, scale: 0.97 }}
+      initial={{ opacity: 0, y: 10, scale: 0.98 }}
       animate={{ opacity: dimmed ? 0.32 : 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.94, transition: { duration: 0.18 } }}
-      transition={{ type: 'spring', stiffness: 420, damping: 32 }}
-      whileHover={overlay ? undefined : { y: -4, scale: 1.015 }}
-      className={`group relative overflow-hidden rounded-2xl border border-white/10 bg-white/[0.05] p-3.5 backdrop-blur-xl transition-colors hover:border-white/20 light:border-black/10 light:bg-white light:hover:border-black/25 ${
+      exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.18 } }}
+      transition={{ type: 'spring', stiffness: 320, damping: 32 }}
+      whileHover={overlay ? undefined : { y: -3, scale: 1.01 }}
+      className={`group relative overflow-hidden rounded-2xl border border-white/10 bg-white/[0.05] p-3.5 backdrop-blur-md transition-colors hover:border-white/20 light:border-black/10 light:bg-white light:hover:border-black/25 ${
         overlay ? 'w-[280px] rotate-[-2deg] shadow-pop ring-2 ring-kamelia/60' : ''
       }`}
       style={{ boxShadow: `inset 3px 0 0 ${zone.accent}` }}

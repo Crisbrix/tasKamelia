@@ -21,9 +21,9 @@ const sizes = {
 export function Button({ variant = 'primary', size = 'md', className = '', children, ...props }) {
   return (
     <motion.button
-      whileHover={props.disabled ? undefined : { scale: 1.03 }}
-      whileTap={props.disabled ? undefined : { scale: 0.96 }}
-      transition={{ type: 'spring', stiffness: 500, damping: 28 }}
+      whileHover={props.disabled ? undefined : { scale: 1.02 }}
+      whileTap={props.disabled ? undefined : { scale: 0.97 }}
+      transition={{ type: 'spring', stiffness: 420, damping: 30 }}
       className={`inline-flex items-center justify-center gap-2 rounded-xl font-semibold tracking-wide transition-colors outline-none focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-50 ${variants[variant]} ${sizes[size]} ${className}`}
       {...props}
     >

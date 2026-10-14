@@ -40,9 +40,9 @@ export function Login() {
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden px-4 py-10">
       <div className="absolute inset-0 bg-radial-fade" />
       <motion.div
-        initial={{ opacity: 0, y: 40, scale: 0.96 }}
+        initial={{ opacity: 0, y: 28, scale: 0.97 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{ type: 'spring', stiffness: 260, damping: 26 }}
+        transition={{ type: 'spring', stiffness: 240, damping: 26 }}
         className="glass relative z-10 w-full max-w-md rounded-3xl p-8"
       >
         <div className="mb-7 flex items-center gap-3">
@@ -122,9 +122,9 @@ export function Login() {
                 <motion.button
                   key={d.email}
                   type="button"
-                  whileHover={{ scale: 1.03, y: -2 }}
-                  whileTap={{ scale: 0.97 }}
-                  transition={{ type: 'spring', stiffness: 480, damping: 26 }}
+                  whileHover={{ scale: 1.02, y: -1 }}
+                  whileTap={{ scale: 0.98 }}
+                  transition={{ type: 'spring', stiffness: 420, damping: 28 }}
                   onClick={() => fill(d.email, d.password)}
                   className="rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-left text-xs font-semibold text-zinc-300 transition hover:border-white/25 hover:text-white light:border-black/10 light:bg-white light:text-zinc-700 light:hover:border-black/25 light:hover:text-zinc-900"
                 >

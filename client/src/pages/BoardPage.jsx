@@ -152,13 +152,10 @@ export function BoardPage({ user }) {
       <AnimatePresence mode="wait">
         <motion.div
           key={zoneId}
-          initial={{ opacity: 0, y: 18, filter: 'blur(6px)' }}
-          animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-          exit={{ opacity: 0, y: -12, filter: 'blur(6px)' }}
-          transition={{
-            default: { type: 'spring', stiffness: 340, damping: 32 },
-            filter: { duration: 0.4, ease: [0.16, 1, 0.3, 1] },
-          }}
+          initial={{ opacity: 0, y: 14 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          transition={{ type: 'spring', stiffness: 260, damping: 30 }}
           className="space-y-5"
         >
           <div className="flex flex-wrap items-center justify-between gap-3">
@@ -192,7 +189,7 @@ export function BoardPage({ user }) {
                   {active && (
                     <motion.span
                       layoutId="area-tab-pill"
-                      transition={{ type: 'spring', stiffness: 460, damping: 36 }}
+                      transition={{ type: 'spring', stiffness: 320, damping: 34 }}
                       className="absolute inset-0 rounded-xl"
                       style={{ background: `${zone.accent}26`, boxShadow: `inset 0 0 0 1px ${zone.accent}66` }}
                     />

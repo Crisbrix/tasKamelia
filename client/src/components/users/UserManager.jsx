@@ -105,7 +105,7 @@ export function UserManager({ user, zone }) {
                     initial={{ opacity: 0, scale: 0.94, y: 10 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.9, x: 40 }}
-                    transition={{ type: 'spring', stiffness: 420, damping: 32 }}
+                    transition={{ type: 'spring', stiffness: 360, damping: 32 }}
                     className="rounded-xl border border-white/10 bg-white/[0.04] p-3 transition hover:border-white/20 light:border-black/10 light:bg-white light:hover:border-black/25"
                   >
                     <div className="flex items-center gap-3">

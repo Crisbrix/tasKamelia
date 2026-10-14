@@ -13,8 +13,8 @@ function Brand() {
   return (
     <div className="flex items-center gap-2.5">
       <motion.div
-        whileHover={{ rotate: 90, scale: 1.08 }}
-        transition={{ type: 'spring', stiffness: 420, damping: 20 }}
+        whileHover={{ rotate: 45, scale: 1.05 }}
+        transition={{ type: 'spring', stiffness: 380, damping: 26 }}
         className="grid h-9 w-9 place-items-center rounded-xl bg-kamelia shadow-glow-brand"
       >
         <svg viewBox="0 0 24 24" className="h-5 w-5 text-white" fill="currentColor">
@@ -46,9 +46,9 @@ export function AppShell() {
   return (
     <div className="min-h-screen">
       <motion.header
-        initial={{ y: -60, opacity: 0 }}
+        initial={{ y: -40, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        transition={{ type: 'spring', stiffness: 320, damping: 30 }}
+        transition={{ type: 'spring', stiffness: 280, damping: 30 }}
         className="sticky top-0 z-50 border-b border-white/[0.07] bg-night-950/80 backdrop-blur-xl light:border-black/10 light:bg-white/85"
       >
         <div className="mx-auto flex max-w-[1400px] items-center justify-between gap-4 px-4 py-3 sm:px-6">
@@ -67,7 +67,7 @@ export function AppShell() {
                     {active && (
                       <motion.span
                         layoutId="nav-pill"
-                        transition={{ type: 'spring', stiffness: 460, damping: 34 }}
+                        transition={{ type: 'spring', stiffness: 380, damping: 34 }}
                         className="absolute inset-0 rounded-lg border border-white/15 bg-white/[0.09] light:border-black/10 light:bg-black/[0.06]"
                       />
                     )}
@@ -151,13 +151,10 @@ export function AppShell() {
         <AnimatePresence mode="wait">
           <motion.div
             key={page}
-            initial={{ opacity: 0, y: 22, filter: 'blur(6px)' }}
-            animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-            exit={{ opacity: 0, y: -14, filter: 'blur(6px)' }}
-            transition={{
-              default: { type: 'spring', stiffness: 340, damping: 32 },
-              filter: { duration: 0.4, ease: [0.16, 1, 0.3, 1] },
-            }}
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ type: 'spring', stiffness: 260, damping: 30 }}
           >
             {page === 'board' ? <BoardPage user={user} /> : <UsersPage user={user} />}
           </motion.div>

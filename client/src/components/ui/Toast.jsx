@@ -38,10 +38,10 @@ export function ToastProvider({ children }) {
               <motion.div
                 key={id}
                 layout
-                initial={{ opacity: 0, x: 80, scale: 0.9 }}
+                initial={{ opacity: 0, x: 48, scale: 0.95 }}
                 animate={{ opacity: 1, x: 0, scale: 1 }}
-                exit={{ opacity: 0, x: 60, scale: 0.92 }}
-                transition={{ type: 'spring', stiffness: 460, damping: 30 }}
+                exit={{ opacity: 0, x: 32, scale: 0.96 }}
+                transition={{ type: 'spring', stiffness: 380, damping: 32 }}
                 className="glass-strong pointer-events-auto overflow-hidden rounded-xl"
                 style={{ borderLeft: `3px solid ${color}` }}
               >

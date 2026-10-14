@@ -53,7 +53,7 @@ export function UsersPage({ user }) {
                 {active && (
                   <motion.span
                     layoutId="users-tab"
-                    transition={{ type: 'spring', stiffness: 460, damping: 34 }}
+                    transition={{ type: 'spring', stiffness: 320, damping: 34 }}
                     className="absolute inset-0 rounded-lg"
                     style={{ background: `${accent}26`, boxShadow: `inset 0 0 0 1px ${accent}66` }}
                   />
@@ -70,10 +70,10 @@ export function UsersPage({ user }) {
       <AnimatePresence mode="wait">
         <motion.div
           key={tab}
-          initial={{ opacity: 0, y: 16 }}
+          initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -10 }}
-          transition={{ type: 'spring', stiffness: 380, damping: 32 }}
+          exit={{ opacity: 0, y: -8 }}
+          transition={{ type: 'spring', stiffness: 320, damping: 32 }}
         >
           {tab === 'all' ? <Directory user={user} /> : <UserManager user={user} zone={tab} />}
         </motion.div>
@@ -222,7 +222,7 @@ function Directory({ user }) {
                   initial={{ opacity: 0, scale: 0.94, y: 12 }}
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.9, x: 40 }}
-                  transition={{ type: 'spring', stiffness: 420, damping: 32, delay: Math.min(i * 0.02, 0.3) }}
+                  transition={{ type: 'spring', stiffness: 360, damping: 32, delay: Math.min(i * 0.02, 0.3) }}
                   className="rounded-xl border border-white/10 bg-white/[0.04] p-3 transition hover:border-white/20 light:border-black/10 light:bg-white light:hover:border-black/25"
                 >
                   <div className="flex items-center gap-3">

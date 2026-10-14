@@ -23,9 +23,9 @@ export function StarRating({ value = 0, onChange, disabled = false, size = 18, s
             onMouseEnter={() => interactive && setHover(star)}
             onFocus={() => interactive && setHover(star)}
             onBlur={() => setHover(0)}
-            whileHover={interactive ? { scale: 1.28, y: -4 } : undefined}
-            whileTap={interactive ? { scale: 0.82 } : undefined}
-            transition={{ type: 'spring', stiffness: 640, damping: 16 }}
+            whileHover={interactive ? { scale: 1.18, y: -2 } : undefined}
+            whileTap={interactive ? { scale: 0.88 } : undefined}
+            transition={{ type: 'spring', stiffness: 420, damping: 24 }}
             className="relative grid place-items-center rounded-md p-0.5 outline-none focus-visible:ring-2 focus-visible:ring-neon-amber/70 disabled:cursor-default"
             aria-label={`${star} estrella${star > 1 ? 's' : ''}`}
             aria-pressed={value === star}
