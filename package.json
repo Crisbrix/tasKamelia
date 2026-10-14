@@ -1,0 +1,18 @@
+{
+  "name": "tareas-kamelia",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Tareas Kamelia - Gestion operativa, RBAC y auditoria de tareas por zonas",
+  "scripts": {
+    "install:all": "npm install && npm install --prefix server && npm install --prefix client",
+    "dev": "concurrently -n server,client -c cyan,magenta \"npm run dev --prefix server\" \"npm run dev --prefix client\"",
+    "dev:server": "npm run dev --prefix server",
+    "dev:client": "npm run dev --prefix client",
+    "build": "npm run build --prefix client",
+    "test": "node scripts/rbac-test.mjs",
+    "start": "npm run start --prefix server"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}

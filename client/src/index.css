@@ -1,0 +1,99 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  @apply bg-night-950 text-zinc-200 antialiased light:bg-[#EBEDF4] light:text-zinc-700;
+  background-image: radial-gradient(1000px 600px at 12% -10%, rgba(255, 46, 99, 0.16), transparent 60%),
+    radial-gradient(900px 520px at 92% 0%, rgba(0, 176, 255, 0.14), transparent 55%),
+    radial-gradient(800px 700px at 50% 120%, rgba(0, 230, 118, 0.1), transparent 60%);
+  background-attachment: fixed;
+}
+
+html.light body {
+  background-image: radial-gradient(1000px 600px at 12% -10%, rgba(255, 46, 99, 0.1), transparent 60%),
+    radial-gradient(900px 520px at 92% 0%, rgba(0, 176, 255, 0.12), transparent 55%),
+    radial-gradient(800px 700px at 50% 120%, rgba(0, 230, 118, 0.08), transparent 60%);
+}
+
+::selection {
+  background: rgba(255, 46, 99, 0.35);
+  color: #fff;
+}
+
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 46, 99, 0.55);
+  background-clip: content-box;
+}
+
+@layer components {
+  .glass {
+    @apply bg-white/[0.04] backdrop-blur-xl border border-white/[0.08] shadow-glow;
+  }
+  .glass-strong {
+    @apply bg-white/[0.07] backdrop-blur-2xl border border-white/[0.12] shadow-pop;
+  }
+  html.light .glass {
+    background: rgba(255, 255, 255, 0.82);
+    border-color: rgba(15, 20, 40, 0.09);
+    box-shadow: 0 18px 50px -22px rgba(30, 40, 80, 0.28);
+  }
+  html.light .glass-strong {
+    background: rgba(255, 255, 255, 0.94);
+    border-color: rgba(15, 20, 40, 0.12);
+    box-shadow: 0 24px 70px -28px rgba(30, 40, 80, 0.35);
+  }
+  /* Menús desplegables: color sólido en ambos temas para máxima legibilidad. */
+  .menu {
+    background: #151824;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 24px 70px -28px rgba(0, 0, 0, 0.95);
+  }
+  html.light .menu {
+    background: #ffffff;
+    border-color: rgba(15, 20, 40, 0.12);
+    box-shadow: 0 24px 60px -24px rgba(30, 40, 80, 0.35);
+  }
+  .chip {
+    @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider;
+  }
+  .field {
+    @apply w-full rounded-xl border border-white/10 bg-black/40 px-3.5 py-2.5 text-sm text-white placeholder-zinc-500 outline-none transition focus:border-kamelia/70 focus:ring-2 focus:ring-kamelia/30 light:border-black/15 light:bg-white light:text-zinc-900;
+  }
+  .label {
+    @apply mb-1.5 block text-[11px] font-bold uppercase tracking-widest text-zinc-400 light:text-zinc-500;
+  }
+}
+
+.noise::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.35;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+  mix-blend-mode: overlay;
+}
