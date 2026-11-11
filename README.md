@@ -103,7 +103,7 @@ Cubre: JWT/401, creación y eliminación de usuarios por rol (403 cruzados, 404,
 
 ### 2. Manual en el navegador
 
-Abre <http://localhost:5173> e ingresa con tu cuenta (la pantalla de login no muestra accesos rápidos por seguridad).
+Abre <http://localhost:5173> e ingresa con tu cuenta (la pantalla de login no muestra accesos rápidos por seguridad). En escritorio el login se divide en dos: panel de marca con una vista previa animada del tablero y el formulario (mostrar/ocultar contraseña, aviso de Bloq Mayús y sacudida al fallar); en mobile queda solo el formulario.
 
 | # | Rol | Qué verificar |
 | --- | --- | --- |
