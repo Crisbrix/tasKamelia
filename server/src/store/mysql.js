@@ -197,7 +197,11 @@ export async function createMysqlStore() {
           next.priority,
           next.assigneeId,
           next.status,
-          next.status === 'done' ? new Date() : null,
+          next.status === 'done'
+            ? new Date()
+            : next.status === 'auditado'
+              ? current.completedAt || new Date()
+              : null,
           id,
         ],
       );
@@ -211,6 +215,28 @@ export async function createMysqlStore() {
         [taskId, stars, comment ?? null, ratedBy],
       );
       return this.findTask(taskId);
+    },
+
+    /** Historial completo de calificaciones con datos de la tarea (para reportes). */
+    async listRatings() {
+      const [rows] = await pool.query(
+        `SELECT r.id, r.stars, r.comment, r.created_at, t.id AS task_id, t.title, t.zone,
+                u.name AS rated_by_name
+         FROM ratings r
+         JOIN tasks t ON t.id = r.task_id
+         LEFT JOIN users u ON u.id = r.rated_by
+         ORDER BY r.created_at DESC`,
+      );
+      return rows.map((r) => ({
+        id: Number(r.id),
+        stars: Number(r.stars),
+        comment: r.comment ?? null,
+        createdAt: r.created_at,
+        taskId: Number(r.task_id),
+        title: r.title,
+        zone: r.zone,
+        ratedByName: r.rated_by_name ?? null,
+      }));
     },
 
     async overview() {
@@ -242,6 +268,7 @@ export async function createMysqlStore() {
           todo: byStatus.todo || 0,
           doing: byStatus.doing || 0,
           done: byStatus.done || 0,
+          auditado: byStatus.auditado || 0,
           pendingReview: Number(doneRows.find((r) => r.zone === zone)?.pending || 0),
           avgStars: rating ? Number(Number(rating.avg_stars).toFixed(1)) : null,
           staff: Number(staffRows.find((r) => r.zone === zone)?.total || 0),
@@ -253,41 +280,50 @@ export async function createMysqlStore() {
 }
 
 async function seed(pool) {
-  const [[{ n }]] = await pool.query('SELECT COUNT(*) AS n FROM users');
-  if (Number(n) > 0) return;
-
+  const [[{ n: userCount }]] = await pool.query('SELECT COUNT(*) AS n FROM users');
   const ids = new Map();
-  for (const u of seedUsers) {
-    const [res] = await pool.query(
-      'INSERT INTO users (name, email, password_hash, role, zone, station) VALUES (?, ?, ?, ?, ?, ?)',
-      [u.name, u.email, bcrypt.hashSync(u.password || SEED_PASSWORD, 10), u.role, u.zone, u.station],
-    );
-    ids.set(u.email, res.insertId);
+
+  if (Number(userCount) === 0) {
+    for (const u of seedUsers) {
+      const [res] = await pool.query(
+        'INSERT INTO users (name, email, password_hash, role, zone, station) VALUES (?, ?, ?, ?, ?, ?)',
+        [u.name, u.email, bcrypt.hashSync(u.password || SEED_PASSWORD, 10), u.role, u.zone, u.station],
+      );
+      ids.set(u.email, res.insertId);
+    }
   }
-  for (const t of seedTasks) {
-    const [res] = await pool.query(
-      `INSERT INTO tasks (title, description, zone, area, status, priority, assignee_id, created_by, completed_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [
+
+  // Sembrado de tareas de las listas físicas: idempotente por título (la DB puede tener datos ya).
+  if (seedTasks.length > 0) {
+    if (ids.size === 0) {
+      const [userRows] = await pool.query('SELECT id, email FROM users');
+      for (const r of userRows) ids.set(r.email, Number(r.id));
+    }
+    const [existing] = await pool.query(`SELECT title FROM tasks WHERE zone = 'cocina'`);
+    const have = new Set(existing.map((r) => r.title));
+    const missing = seedTasks.filter((t) => !have.has(t.title));
+    if (missing.length > 0) {
+      const creatorId = ids.get('kamelia@gmail.com') ?? [...ids.values()][0];
+      const taskValues = missing.map((t) => [
         t.title,
         t.description,
         t.zone,
         t.area,
         t.status,
         t.priority,
-        t.assignee ? ids.get(t.assignee) : null,
-        ids.get(t.createdBy || 'gerente@kamelia.com'),
-        t.status === 'done' ? new Date() : null,
-      ],
-    );
-    if (t.rating) {
-      await pool.query('INSERT INTO ratings (task_id, stars, comment, rated_by) VALUES (?, ?, ?, ?)', [
-        res.insertId,
-        t.rating.stars,
-        t.rating.comment ?? null,
-        ids.get(t.rating.by),
+        null,
+        creatorId,
       ]);
+      const placeholders = taskValues.map(() => '(?, ?, ?, ?, ?, ?, ?, ?)').join(', ');
+      await pool.query(
+        `INSERT INTO tasks (title, description, zone, area, status, priority, assignee_id, created_by) VALUES ${placeholders}`,
+        taskValues.flat(),
+      );
+      console.log(`[db] ${missing.length} tareas de Cocina sembradas.`);
     }
   }
-  console.log('[db] Esquema creado y datos sembrados en TiDB.');
+
+  if (Number(userCount) === 0) {
+    console.log('[db] Esquema creado y datos sembrados en TiDB.');
+  }
 }

@@ -59,4 +59,5 @@ export const api = {
   updateTask: (id, payload) => request(`/tasks/${id}`, { method: 'PATCH', body: payload }),
   deleteTask: (id) => request(`/tasks/${id}`, { method: 'DELETE' }),
   rateTask: (id, stars, comment) => request(`/tasks/${id}/rate`, { method: 'POST', body: { stars, comment } }),
+  report: () => request('/ratings/report'),
 };

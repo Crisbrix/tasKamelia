@@ -71,6 +71,7 @@ export function StatsBar({ zone, overview }) {
     ...(zone.rating
       ? [
           { label: 'Por revisar', value: data.pendingReview ?? 0, color: '#FFC400', warn: (data.pendingReview ?? 0) > 0 },
+          { label: 'Auditado', value: data.auditado ?? 0, color: '#FF9100' },
           { label: 'Promedio ★', value: data.avgStars ? `${data.avgStars}` : '—', color: '#FFC400' },
         ]
       : []),

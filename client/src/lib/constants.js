@@ -5,7 +5,7 @@ export const ZONES = {
     subtitle: 'Prioridad máxima',
     accent: '#FF2E63',
     rating: true,
-    areas: ['Mise en place', 'Neveras', 'Aseo', 'Picado'],
+    areas: ['Mise en place', 'Neveras', 'Aseo', 'Picado', 'Inventario', 'Administrativo'],
     description: 'Chef administra el personal y las tareas. El Auditor califica en "Hecho".',
   },
   finca: {
@@ -34,6 +34,7 @@ export const STATUSES = [
   { id: 'todo', label: 'Por Hacer', accent: '#7C4DFF' },
   { id: 'doing', label: 'Haciendo', accent: '#00B0FF' },
   { id: 'done', label: 'Hecho', accent: '#00E676' },
+  { id: 'auditado', label: 'Auditado', accent: '#FFC400' },
 ];
 
 export const PRIORITIES = [

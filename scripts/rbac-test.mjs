@@ -145,6 +145,20 @@ check('Auditor SI puede crear personal de Cocina', a3.status === 201, JSON.strin
 const tasksCocina = await call(auditor.token, 'GET', '/tasks?zone=cocina');
 check('Auditor lista tareas de Cocina', tasksCocina.status === 200 && Array.isArray(tasksCocina.data));
 
+// --- Semilla de las listas físicas (idempotente por título) ---
+const seedTitles = tasksCocina.data.map((t) => t.title);
+check(
+  'Seed de Cocina: ≥54 tareas de las listas físicas',
+  tasksCocina.data.length >= 54 && ['Revisar Gas', 'Pedido Papa R12', 'Meter Facturas al Sistema', 'Limpiar Campanas'].every((x) => seedTitles.includes(x)),
+  `total=${tasksCocina.data.length}`,
+);
+const seedAreas = new Set(tasksCocina.data.map((t) => t.area));
+check(
+  'Seed cubre áreas Inventario, Administrativo y Aseo',
+  ['Inventario', 'Administrativo', 'Aseo'].every((a) => seedAreas.has(a)),
+  JSON.stringify([...seedAreas]),
+);
+
 const comedorTasks = await call(jefe.token, 'GET', '/tasks?zone=comedor');
 check('Jefe lista tareas de Comedor', comedorTasks.status === 200 && Array.isArray(comedorTasks.data));
 
@@ -187,6 +201,60 @@ if (createTask.status === 201) {
   check('Auditor puede reposicionar en Cocina', personalMove.status === 200, `status=${personalMove.status}`);
 }
 
+// --- Columna "Auditado" (4ª columna: solo Gerente, solo desde Hecho y con estrellas) ---
+const auditTask = await call(chef.token, 'POST', '/tasks', {
+  title: `Auditoria E2E ${TS}`,
+  zone: 'cocina',
+  area: 'Aseo',
+  priority: 'media',
+});
+if (auditTask.status === 201) {
+  const aid = auditTask.data.id;
+
+  const s1 = await call(gerente.token, 'PATCH', `/tasks/${aid}`, { status: 'auditado' });
+  check('No se audita una tarea sin terminar (400)', s1.status === 400, `status=${s1.status}`);
+
+  await call(chef.token, 'PATCH', `/tasks/${aid}`, { status: 'done' });
+  const s2 = await call(gerente.token, 'PATCH', `/tasks/${aid}`, { status: 'auditado' });
+  check('No se audita sin calificación (400)', s2.status === 400, `status=${s2.status}`);
+
+  await call(auditor.token, 'POST', `/tasks/${aid}/rate`, { stars: 3 });
+  const s3 = await call(auditor.token, 'PATCH', `/tasks/${aid}`, { status: 'auditado' });
+  check('Auditor NO mueve a Auditado (403)', s3.status === 403, `status=${s3.status}`);
+
+  const s4 = await call(gerente.token, 'PATCH', `/tasks/${aid}`, { status: 'auditado' });
+  check(
+    'Gerente mueve a Auditado conservando completedAt',
+    s4.status === 200 && s4.data.status === 'auditado' && Boolean(s4.data.completedAt),
+    JSON.stringify({ status: s4.data?.status, completedAt: s4.data?.completedAt }),
+  );
+
+  const s5 = await call(gerente.token, 'PATCH', `/tasks/${aid}`, { status: 'done' });
+  check('Auditado vuelve a Hecho', s5.status === 200 && s5.data.status === 'done', `status=${s5.status}`);
+
+  // El Gerente puede calificar también desde Auditado
+  const s6 = await call(gerente.token, 'POST', `/tasks/${aid}/rate`, { stars: 5 });
+  check('Se recalifica desde Auditado', s6.status === 200 && s6.data.rating?.stars === 5, `status=${s6.status}`);
+
+  await call(gerente.token, 'DELETE', `/tasks/${aid}`);
+}
+
+// --- Reporte de calificaciones (solo Gerente) ---
+const repAuditor = await call(auditor.token, 'GET', '/ratings/report');
+check('Reporte NO disponible para Auditor (403)', repAuditor.status === 403, `status=${repAuditor.status}`);
+
+const repGerente = await call(gerente.token, 'GET', '/ratings/report');
+check(
+  'Gerente obtiene el reporte con historial de 8 semanas',
+  repGerente.status === 200 && Array.isArray(repGerente.data.history) && repGerente.data.history.length === 8,
+  JSON.stringify(repGerente.data?.history?.length ?? repGerente.data),
+);
+check(
+  'Reporte incluye promedio semanal y peores tareas',
+  repGerente.status === 200 && 'weeklyAvg' in repGerente.data && Array.isArray(repGerente.data.worst) && typeof repGerente.data.total === 'number',
+  JSON.stringify({ weeklyAvg: repGerente.data?.weeklyAvg, worst: repGerente.data?.worst?.length, total: repGerente.data?.total }),
+);
+
 // --- Comedor no admite calificación ---
 const comedorTask = await call(jefe.token, 'POST', '/tasks', {
   title: `Servicio E2E ${TS}`,
@@ -197,6 +265,9 @@ if (comedorTask.status === 201) {
   await call(jefe.token, 'PATCH', `/tasks/${comedorTask.data.id}`, { status: 'done' });
   const r4 = await call(auditor.token, 'POST', `/tasks/${comedorTask.data.id}/rate`, { stars: 3 });
   check('Comedor no admite calificación (403)', r4.status === 403, `status=${r4.status}`);
+
+  const rAudit = await call(gerente.token, 'PATCH', `/tasks/${comedorTask.data.id}`, { status: 'auditado' });
+  check('Comedor no tiene columna Auditado (403)', rAudit.status === 403, `status=${rAudit.status}`);
 }
 
 // --- Baja de usuarios ---

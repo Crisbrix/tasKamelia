@@ -1,9 +1,10 @@
 import { forwardRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useDraggable } from '@dnd-kit/core';
-import { Check, Flame, Lock, Pencil, Sparkles, Trash2, X } from 'lucide-react';
+import { Check, ChevronDown, Flame, Lock, Pencil, Sparkles, Trash2, X } from 'lucide-react';
 import { PRIORITY_MAP, ZONES } from '../../lib/constants';
 import { canEditTask, canDeleteTask, canRate } from '../../lib/permissions';
+import { useIsMobile } from '../../lib/hooks';
 import { StarRating } from '../audit/StarRating';
 
 const initials = (name = '?') =>
@@ -22,14 +23,22 @@ function Avatar({ name }) {
   );
 }
 
-export function TaskCardView({ task, user, flash = false, overlay = false, dimmed = false, onRate, onEdit, onDelete }) {
+export function TaskCardView({ task, user, flash = false, overlay = false, dimmed = false, onRate, onOpenRating, onEdit, onDelete }) {
   const zone = ZONES[task.zone];
   const priority = PRIORITY_MAP[task.priority] || PRIORITY_MAP.media;
-  const auditable = task.status === 'done' && zone.rating;
+  const auditable = (task.status === 'done' || task.status === 'auditado') && zone.rating;
   const mayRate = auditable && canRate(user, task);
   const mayEdit = !overlay && canEditTask(user, task);
   const mayDelete = !overlay && canDeleteTask(user, task);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const isMobile = useIsMobile();
+  const [open, setOpen] = useState(false);
+  // Mobile-first: tarjeta minimalista, los detalles se despliegan al tocar.
+  const expanded = !isMobile || open;
+
+  const toggle = () => {
+    if (isMobile && !overlay) setOpen((v) => !v);
+  };
 
   return (
     <motion.article
@@ -39,6 +48,7 @@ export function TaskCardView({ task, user, flash = false, overlay = false, dimme
       exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.18 } }}
       transition={{ type: 'spring', stiffness: 320, damping: 32 }}
       whileHover={overlay ? undefined : { y: -3, scale: 1.01 }}
+      onClick={toggle}
       className={`group relative overflow-hidden rounded-2xl border border-white/10 bg-white/[0.05] p-3.5 backdrop-blur-md transition-colors hover:border-white/20 light:border-black/10 light:bg-white light:hover:border-black/25 ${
         overlay ? 'w-[280px] rotate-[-2deg] shadow-pop ring-2 ring-kamelia/60' : ''
       }`}
@@ -46,8 +56,11 @@ export function TaskCardView({ task, user, flash = false, overlay = false, dimme
     >
       {(mayEdit || mayDelete) && !flash && (
         <div
-          className="absolute right-2 top-2 z-10 flex items-center gap-0.5 rounded-lg border border-white/10 bg-black/60 p-0.5 opacity-0 backdrop-blur-md transition group-hover:opacity-100 light:border-black/10 light:bg-white/90"
+          className={`absolute right-2 top-2 z-10 flex items-center gap-0.5 rounded-lg border border-white/10 bg-black/60 p-0.5 backdrop-blur-md transition light:border-black/10 light:bg-white/90 md:opacity-0 md:group-hover:opacity-100 ${
+            open ? 'opacity-100' : 'opacity-0'
+          }`}
           onPointerDown={(e) => e.stopPropagation()}
+          onClick={(e) => e.stopPropagation()}
         >
           {mayEdit && (
             <button
@@ -116,41 +129,72 @@ export function TaskCardView({ task, user, flash = false, overlay = false, dimme
       </div>
 
       <h3 className="text-[13.5px] font-bold leading-snug text-white light:text-zinc-900">{task.title}</h3>
-      {task.description && <p className="mt-1 line-clamp-2 text-[11.5px] leading-relaxed text-zinc-400 light:text-zinc-500">{task.description}</p>}
 
-      <div className="mt-3 flex items-center justify-between gap-2">
-        <span className="flex min-w-0 items-center gap-1.5">
-          <Avatar name={task.assigneeName || 'Sin'} />
-          <span className="truncate text-[11px] font-semibold text-zinc-300 light:text-zinc-600">{task.assigneeName || 'Sin asignar'}</span>
-        </span>
-        {task.status === 'done' && !zone.rating && <span className="chip bg-neon-green/15 text-neon-green light:text-[#00875A]">Listo</span>}
-      </div>
+      <motion.div
+        initial={false}
+        animate={{ height: expanded ? 'auto' : 0, opacity: expanded ? 1 : 0 }}
+        transition={{ type: 'spring', stiffness: 340, damping: 34 }}
+        className="overflow-hidden"
+      >
+        <div className="pt-1.5">
+          {task.description && <p className="line-clamp-2 text-[11.5px] leading-relaxed text-zinc-400 light:text-zinc-500">{task.description}</p>}
 
-      {auditable && (
-        <div className="mt-3 border-t border-white/10 pt-2.5 light:border-black/10">
-          {mayRate ? (
-            <div className="flex items-center justify-between gap-2">
-              <StarRating value={task.rating?.stars || 0} onChange={(stars) => onRate?.(task, stars)} size={15} />
-              <span className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-neon-amber light:text-amber-700">
-                <Sparkles size={11} /> Calificar
-              </span>
-            </div>
-          ) : task.rating ? (
-            <div className="flex items-center justify-between gap-2">
-              <StarRating value={task.rating.stars} size={14} />
-              <span className="text-[10px] font-semibold text-zinc-500">por {task.rating.ratedByName || 'Auditoría'}</span>
-            </div>
-          ) : (
-            <div className="flex items-center justify-between gap-2">
-              <span className="flex items-center gap-1.5 text-[10.5px] font-bold uppercase tracking-wider text-zinc-500">
-                <Sparkles size={12} className="text-neon-amber" /> Auditoría
-              </span>
-              <span className="flex items-center gap-1.5 text-[10px] font-semibold text-zinc-500">
-                <Lock size={11} /> Pendiente
-              </span>
+          <div className="mt-3 flex items-center justify-between gap-2">
+            <span className="flex min-w-0 items-center gap-1.5">
+              <Avatar name={task.assigneeName || 'Sin'} />
+              <span className="truncate text-[11px] font-semibold text-zinc-300 light:text-zinc-600">{task.assigneeName || 'Sin asignar'}</span>
+            </span>
+            {task.status === 'done' && !zone.rating && <span className="chip bg-neon-green/15 text-neon-green light:text-[#00875A]">Listo</span>}
+            {task.status === 'auditado' && <span className="chip bg-neon-amber/15 text-neon-amber light:text-amber-700">Auditado</span>}
+          </div>
+
+          {auditable && (
+            <div className="mt-3 border-t border-white/10 pt-2.5 light:border-black/10">
+              <div className="flex items-center justify-between gap-2">
+                <StarRating value={task.rating?.stars || 0} size={14} />
+                {mayRate ? (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onOpenRating?.(task);
+                    }}
+                    className="flex items-center gap-1 rounded-lg px-2 py-1 text-[10px] font-extrabold uppercase tracking-wider text-neon-amber transition hover:bg-neon-amber/10 light:text-amber-700"
+                  >
+                    <Sparkles size={11} /> {task.rating ? 'Recalificar' : 'Calificar'}
+                  </button>
+                ) : task.rating ? (
+                  <span className="text-[10px] font-semibold text-zinc-500">por {task.rating.ratedByName || 'Auditoría'}</span>
+                ) : (
+                  <span className="flex items-center gap-1.5 text-[10px] font-semibold text-zinc-500">
+                    <Lock size={11} /> Pendiente
+                  </span>
+                )}
+              </div>
             </div>
           )}
         </div>
+      </motion.div>
+
+      {isMobile && !overlay && (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            setOpen((v) => !v);
+          }}
+          className="mt-2 flex w-full items-center justify-center gap-1 rounded-lg py-1 text-[10px] font-extrabold uppercase tracking-wider text-zinc-500 transition hover:text-zinc-300 light:hover:text-zinc-700"
+        >
+          {open ? 'Menos' : 'Detalles'}
+          <motion.span
+            animate={{ rotate: open ? 180 : 0 }}
+            transition={{ type: 'spring', stiffness: 420, damping: 24 }}
+            style={{ transform: 'translateZ(0)' }}
+            className="block"
+          >
+            <ChevronDown size={12} />
+          </motion.span>
+        </button>
       )}
 
       {flash && (

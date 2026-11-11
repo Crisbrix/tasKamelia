@@ -5,7 +5,7 @@ export const ZONES = {
     subtitle: 'Prioridad máxima',
     accent: '#FF2E63',
     rating: true,
-    areas: ['Mise en place', 'Neveras', 'Aseo', 'Picado'],
+    areas: ['Mise en place', 'Neveras', 'Aseo', 'Picado', 'Inventario', 'Administrativo'],
     managerRoles: ['gerente', 'chef'],
     createRoles: ['cocinero', 'ayudante_cocina'],
   },
@@ -31,7 +31,7 @@ export const ZONES = {
   },
 };
 
-export const STATUSES = ['todo', 'doing', 'done'];
+export const STATUSES = ['todo', 'doing', 'done', 'auditado'];
 export const PRIORITIES = ['alta', 'media', 'baja'];
 
 export const ROLES = {

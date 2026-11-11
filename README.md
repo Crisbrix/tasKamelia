@@ -12,7 +12,7 @@ Interfaz **dark mode de alto contraste** (sin colores pastel) con **modo claro**
 | --- | --- |
 | Frontend | React 18 + Vite + Tailwind CSS 3 |
 | Animaciones | Framer Motion (springs, `layoutId`, `AnimatePresence`) |
-| Drag & Drop | `@dnd-kit/core` con `DragOverlay` y micro-feedback al soltar en "Hecho" |
+| Drag & Drop | `@dnd-kit/core` con `DragOverlay`, `MouseSensor` (8px) + `TouchSensor` (long-press 220ms, tolerancia 12px) y micro-feedback al soltar en "Hecho" |
 | Backend | Node.js + Express (ESM) |
 | Base de datos | **TiDB** (MySQL compatible vía `mysql2`) con **fallback automático a memoria** |
 | Auth | JWT (`jsonwebtoken`) + `bcryptjs` |
@@ -54,7 +54,7 @@ DATABASE_URL=mysql://usuario:clave@gateway01.xxx.tidbcloud.com:4006/kamelia?ssl=
 | Rol | Puede |
 | --- | --- |
 | **Gerente** | Control total: crea, visualiza y elimina **cualquier rol y zona**, gestiona las 3 zonas, califica tareas y administra usuarios |
-| **Auditor** | Gestiona usuarios de **Cocina + Finca** (crear, ver, eliminar); gestiona tareas de **Finca** y **califica** tareas en "Hecho" de **Cocina** y **Finca** |
+| **Auditor** | Gestiona usuarios de **Cocina + Finca** (crear, ver, eliminar); gestiona tareas de **Finca** y **califica** tareas en "Hecho"/"Auditado" de **Cocina** y **Finca** |
 | **Chef** | Administra **Cocina**: crea, visualiza y elimina personal de cocina y asigna tareas |
 | **Jefe de Meseros** | Administra **Comedor**: crea, visualiza y elimina meseros |
 | Personal de zona | Solo arrastra/mueve sus propias tareas |
@@ -76,8 +76,9 @@ Los componentes de calificación y de creación de usuarios quedan **envueltos p
 
 ## Zonas y flujos
 
-1. **Cocina (prioridad máxima)** — sub-pestañas por área (*Mise en place, Neveras, Aseo, Picado*), cada una con su propio Kanban: las áreas no comparten tareas.
-   Chef crea personal/tarea → el personal arrastra a **Hecho** → se desbloquea el **Star Rating** para Auditor/Gerente.
+1. **Cocina (prioridad máxima)** — sub-pestañas por área (*Mise en place, Neveras, Aseo, Picado, Inventario, Administrativo*), cada una con su propio Kanban: las áreas no comparten tareas.
+   Está **sembrada con las listas físicas** (idempotente por título): *Pedidos e Inventario* (22), *Check list Aseo Cocina* (30) y *Administrativo* (2).
+   Chef crea personal/tarea → el personal arrastra a **Hecho** → se desbloquea el **Star Rating** para Auditor/Gerente → el Gerente cierra en la columna **Auditado**.
 2. **Finca (mantenimiento y aseo)** — gestión exclusiva del **Auditor**: crea encargados, asigna trabajos y los califica al pasar a "Hecho".
 3. **Comedor (servicio)** — estaciones: Derecho, Izquierdo, Palco y Chalet, Envase, Reciclaje, Carritos, Servilletero. El **Jefe de Meseros** crea y gestiona al personal de servicio.
 
@@ -85,14 +86,14 @@ Los componentes de calificación y de creación de usuarios quedan **envueltos p
 
 ## Cómo probarlo
 
-### 1. Automatizado (31 aserciones de RBAC + flujos)
+### 1. Automatizado (55 aserciones de RBAC + flujos)
 
 ```bash
 npm run dev      # terminal 1: API :4000 + app :5173
 npm test         # terminal 2: suite E2E (idempotente, usa correos únicos)
 ```
 
-Cubre: JWT/401, creación y eliminación de usuarios por rol (403 cruzados, 404, sin auto-eliminación), validación de áreas, mover a "Hecho", calificación 1–5, recalificación del Gerente y bloqueo de estrellas en Comedor.
+Cubre: JWT/401, creación y eliminación de usuarios por rol (403 cruzados, 404, sin auto-eliminación), validación de áreas, mover a "Hecho", calificación 1–5, recalificación del Gerente, bloqueo de estrellas en Comedor, **semilla de Cocina (≥54 tareas)**, **flujo de la columna "Auditado"** (400 sin terminar/sin estrellas, 403 no-Gerente, 403 en Comedor) y **reporte del Gerente** (403 para Auditor, historial de 8 semanas).
 
 | # | Rol | Qué verificar |
 | --- | --- | --- |
@@ -114,6 +115,10 @@ Abre <http://localhost:5173> e ingresa con tu cuenta (la pantalla de login no mu
 | 6 | Gerente | Menú **Personal → Directorio** → dropdown de rol + zona + estación; crea usuarios de cualquier rol y filtra el directorio |
 | 7 | Cualquiera | Cambia de pestaña → transición con blur/spring; el contador ámbar marca tareas sin revisar |
 | 11 | Cualquiera | Botón ☀/🌙 en el header → modo claro con tarjetas blancas y mismo contraste; la elección persiste al recargar |
+| 12 | Gerente/Auditor | Tarjeta "Hecho" en Cocina/Finca → botón **Calificar** abre el modal con 5 estrellas (rebote al tocar), comentario opcional |
+| 13 | Gerente | Arrastra una tarea **Hecho → Auditado** (o marca "Mover a Auditado al guardar" en el modal); solo el Gerente puede hacerlo y solo con estrellas |
+| 14 | Gerente | Menú **Reportes** → promedio semanal de Cocina, tareas peor calificadas y gráfico de barras del historial de 8 semanas |
+| 15 | Cualquiera (móvil) | Pantalla <768px → Kanban en **carrusel horizontal** con swipe, indicadores sincronizados y tarjetas minimalistas (detalles al tocar) |
 
 ### 3. Producción
 
@@ -143,15 +148,15 @@ task/
 └── client/
     └── src/
         ├── App.jsx / main.jsx / index.css
-        ├── lib/{api.js,constants.js,permissions.js}
+        ├── lib/{api.js,constants.js,permissions.js,hooks.js}
         ├── context/AuthContext.jsx
-        ├── pages/{BoardPage.jsx,AdminUsers.jsx}
+        ├── pages/{BoardPage.jsx,ReportPage.jsx,AdminUsers.jsx}
         └── components/
             ├── shell/AppShell.jsx
             ├── ui/{Button,Select,Modal,Toast}
             ├── ZoneTabs.jsx        # pestañas animadas + métricas
             ├── kanban/{KanbanBoard,Column,TaskCard,TaskModal}
-            ├── audit/StarRating.jsx
+            ├── audit/{StarRating,RatingModal}.jsx
             ├── team/TeamPanel.jsx
             └── Login.jsx
 ```
@@ -172,15 +177,15 @@ task/
 | POST | `/api/tasks` | ✓ | solo jefe de zona/gerente |
 | PATCH | `/api/tasks/:id` | ✓ | mover entre columnas, reasignar |
 | DELETE | `/api/tasks/:id` | ✓ | `canDeleteTask`: Gerente todo; gestores solo en sus zonas |
-| POST | `/api/tasks/:id/rate` | ✓ | estrellas 1–5, solo Auditor/Gerente en Cocina/Finca |
+| POST | `/api/tasks/:id/rate` | ✓ | estrellas 1–5, solo Auditor/Gerente en Cocina/Finca (acepta "Hecho" y "Auditado") |
+| GET | `/api/ratings/report` | ✓ | **solo Gerente**: promedio semanal de Cocina, peores tareas e historial de 8 semanas |
 | GET | `/api/overview` | ✓ | métricas por zona (queries en paralelo) |
 | GET | `/api/board?zone=` | ✓ | tablero completo en 1 sola petición: tareas + personal + métricas |
-| GET | `/api/overview` | ✓ | métricas por zona |
 
 ---
 
 ## Verificación
 
 - `npm run build --prefix client` → build de producción OK.
-- `npm test` → suite E2E (`scripts/rbac-test.mjs`), 43 aserciones, ejecutable de forma repetida.
-- Flujos de navegador verificados con automatización (drag Por Hacer→Haciendo con PATCH 200; CRUD de usuarios por rol; consola sin errores).
+- `npm test` → suite E2E (`scripts/rbac-test.mjs`), 55 aserciones, ejecutable de forma repetida.
+- Suite UI con Playwright (desktop 1440×900 + mobile 390×844 touch): 35 checks — 4 columnas, modal de calificación, drag Hecho→Auditado, checkbox del modal, página Reportes (8 barras + KPIs), modo claro, nav RBAC del Auditor, carrusel mobile (swipe CDP + indicador sincronizado) y consola sin errores JS.

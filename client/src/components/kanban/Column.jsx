@@ -3,14 +3,14 @@ import { useDroppable } from '@dnd-kit/core';
 import { TaskCard } from './TaskCard';
 import { canEditTask } from '../../lib/permissions';
 
-export function Column({ status, tasks, user, flashId, onRate, onEdit, onDelete }) {
+export function Column({ status, tasks, user, flashId, onRate, onOpenRating, onEdit, onDelete, className = '' }) {
   const { setNodeRef, isOver } = useDroppable({ id: `col:${status.id}` });
 
   return (
     <motion.section
       layout
       ref={setNodeRef}
-      className="relative flex min-h-[420px] flex-col rounded-2xl border border-white/[0.07] bg-white/[0.02] p-3 transition-colors light:border-black/10 light:bg-black/[0.02]"
+      className={`relative flex min-h-[420px] flex-col rounded-2xl border border-white/[0.07] bg-white/[0.02] p-3 transition-colors light:border-black/10 light:bg-black/[0.02] ${className}`}
       style={
         isOver
           ? {
@@ -41,7 +41,7 @@ export function Column({ status, tasks, user, flashId, onRate, onEdit, onDelete 
         </span>
       </header>
 
-      <div className="flex flex-1 flex-col gap-3">
+      <div className="flex max-h-[58vh] flex-1 flex-col gap-3 overflow-y-auto md:max-h-none md:overflow-visible">
         <AnimatePresence mode="popLayout" initial={false}>
           {tasks.map((task) => (
             <TaskCard
@@ -49,6 +49,7 @@ export function Column({ status, tasks, user, flashId, onRate, onEdit, onDelete 
               task={task}
               user={user}
               onRate={onRate}
+              onOpenRating={onOpenRating}
               onEdit={onEdit}
               onDelete={onDelete}
               flash={flashId === task.id}

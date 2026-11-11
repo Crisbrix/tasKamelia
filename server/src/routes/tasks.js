@@ -1,7 +1,7 @@
 ﻿import { Router } from 'express';
 import { getStore } from '../store/index.js';
 import { asyncHandler } from '../auth.js';
-import { canCreateTask, canEditTask, canRate, canManageZone, canDeleteTask, HttpError } from '../rbac.js';
+import { canCreateTask, canEditTask, canRate, canMoveToAudit, canManageZone, canDeleteTask, HttpError } from '../rbac.js';
 import { PRIORITIES, STATUSES, ZONES } from '../constants.js';
 
 export const tasksRouter = Router();
@@ -53,6 +53,17 @@ tasksRouter.patch(
     const patch = {};
     if (req.body.status !== undefined) {
       if (!STATUSES.includes(req.body.status)) throw new HttpError(400, 'Estado no válido', 'validation');
+      if (req.body.status === 'auditado' && task.status !== 'auditado') {
+        if (!canMoveToAudit(req.user, task)) {
+          throw new HttpError(403, 'Solo el Gerente mueve tareas a la columna Auditado', 'forbidden');
+        }
+        if (task.status !== 'done') {
+          throw new HttpError(400, 'Solo se auditan tareas que están en Hecho', 'validation');
+        }
+        if (!task.rating) {
+          throw new HttpError(400, 'Califica la tarea con estrellas antes de auditarla', 'validation');
+        }
+      }
       patch.status = req.body.status;
     }
     for (const key of ['title', 'description', 'area', 'priority']) {
@@ -92,8 +103,7 @@ tasksRouter.post(
     if (!task) throw new HttpError(404, 'Tarea no encontrada', 'not_found');
     if (!canRate(req.user, task)) {
       throw new HttpError(403, 'Solo Auditor o Gerente califican tareas completadas de Cocina/Finca', 'forbidden');
-    }
-    const stars = Number(req.body?.stars);
+    }    const stars = Number(req.body?.stars);
     if (!Number.isInteger(stars) || stars < 1 || stars > 5) {
       throw new HttpError(400, 'La calificación debe ser un entero de 1 a 5', 'validation');
     }

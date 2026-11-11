@@ -2,16 +2,17 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Plus, ShieldHalf, Users } from 'lucide-react';
 import { api } from '../lib/api';
-import { ZONES } from '../lib/constants';
+import { STATUSES, ZONES } from '../lib/constants';
 import { accentText } from '../lib/theme';
 import { useTheme } from '../context/ThemeContext';
-import { canCreateTask, canManageZone, canManageUsers } from '../lib/permissions';
+import { canCreateTask, canManageZone, canManageUsers, canMoveToAudit } from '../lib/permissions';
 import { useToast } from '../components/ui/Toast';
 import { Button } from '../components/ui/Button';
 import { ZoneTabs, StatsBar } from '../components/ZoneTabs';
 import { KanbanBoard } from '../components/kanban/KanbanBoard';
 import { TaskModal } from '../components/kanban/TaskModal';
 import { TeamPanel } from '../components/team/TeamPanel';
+import { RatingModal } from '../components/audit/RatingModal';
 
 export function BoardPage({ user }) {
   const toast = useToast();
@@ -24,11 +25,15 @@ export function BoardPage({ user }) {
   const [taskModal, setTaskModal] = useState(false);
   const [editingTask, setEditingTask] = useState(null);
   const [teamOpen, setTeamOpen] = useState(false);
+  const [ratingTask, setRatingTask] = useState(null);
   const [loading, setLoading] = useState(true);
   const versionRef = useRef({});
   const loadedRef = useRef({});
 
   const zone = ZONES[zoneId];
+  // La columna "Auditado" solo existe en zonas con auditoría (Cocina y Finca).
+  const statuses = useMemo(() => STATUSES.filter((s) => s.id !== 'auditado' || zone.rating), [zone]);
+  const gridClass = statuses.length === 4 ? 'md:grid-cols-4' : 'md:grid-cols-3';
 
   const loadOverview = useCallback(() => {
     api.overview().then(setOverview).catch(() => {});
@@ -80,10 +85,31 @@ export function BoardPage({ user }) {
 
   const handleMove = async (task, status) => {
     if (task.status === status) return;
+    if (status === 'auditado') {
+      if (!canMoveToAudit(user, task)) {
+        toast.push('Solo el Gerente mueve tareas a la columna Auditado', 'error');
+        return;
+      }
+      if (!task.rating) {
+        toast.push('Califica la tarea con estrellas antes de auditarla', 'error');
+        return;
+      }
+    }
     const previous = zoneCache.tasks;
     patchZone(zoneId, {
       tasks: previous.map((t) =>
-        t.id === task.id ? { ...t, status, completedAt: status === 'done' ? new Date().toISOString() : null } : t,
+        t.id === task.id
+          ? {
+              ...t,
+              status,
+              completedAt:
+                status === 'done'
+                  ? new Date().toISOString()
+                  : status === 'auditado'
+                    ? t.completedAt || new Date().toISOString()
+                    : null,
+            }
+          : t,
       ),
     });
 
@@ -97,6 +123,9 @@ export function BoardPage({ user }) {
         zone.rating ? 'audit' : 'success',
       );
     }
+    if (status === 'auditado' && task.status !== 'auditado') {
+      toast.push(`"${task.title}" auditada y cerrada`, 'audit');
+    }
 
     try {
       const updated = await api.updateTask(task.id, { status });
@@ -108,14 +137,20 @@ export function BoardPage({ user }) {
     }
   };
 
-  const handleRate = async (task, stars) => {
+  const handleRate = async (task, stars, comment = null, moveToAudit = false) => {
     try {
-      const updated = await api.rateTask(task.id, stars);
+      const updated = await api.rateTask(task.id, stars, comment);
       patchZone(zoneId, { tasks: zoneCache.tasks.map((t) => (t.id === task.id ? updated : t)) });
       toast.push(`${stars} ★ asignadas a "${task.title}"`, 'audit');
+      if (moveToAudit && canMoveToAudit(user, updated)) {
+        const moved = await api.updateTask(task.id, { status: 'auditado' });
+        patchZone(zoneId, { tasks: zoneCache.tasks.map((t) => (t.id === task.id ? moved : t)) });
+        toast.push(`"${task.title}" movida a la columna Auditado`, 'audit');
+      }
       loadOverview();
     } catch (err) {
       toast.push(err.message, 'error');
+      throw err;
     }
   };
 
@@ -226,18 +261,20 @@ export function BoardPage({ user }) {
           </div>
 
           {loading ? (
-            <div className="grid gap-4 md:grid-cols-3">
-              {[0, 1, 2].map((i) => (
-                <div key={i} className="glass h-[420px] animate-pulse rounded-2xl opacity-60" />
+            <div className={`grid gap-4 ${gridClass}`}>
+              {statuses.map((s) => (
+                <div key={s.id} className="glass h-[420px] animate-pulse rounded-2xl opacity-60" />
               ))}
             </div>
           ) : (
             <KanbanBoard
               tasks={visibleTasks}
               user={user}
+              statuses={statuses}
               flashId={flashId}
               onMove={handleMove}
               onRate={handleRate}
+              onOpenRating={setRatingTask}
               onEdit={(task) => {
                 setEditingTask(task);
                 setTaskModal(true);
@@ -267,6 +304,13 @@ export function BoardPage({ user }) {
           setEditingTask(null);
           loadOverview();
         }}
+      />
+
+      <RatingModal
+        task={ratingTask}
+        user={user}
+        onClose={() => setRatingTask(null)}
+        onSubmit={handleRate}
       />
 
       <TeamPanel

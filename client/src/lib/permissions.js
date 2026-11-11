@@ -24,12 +24,19 @@ export function canEditTask(user, task) {
   return false;
 }
 
-/** Módulo de auditoría: solo Auditor/Gerente y solo en tareas "Hecho" de Cocina/Finca. */
+/** Módulo de auditoría: solo Auditor/Gerente y solo en tareas "Hecho"/"Auditado" de Cocina/Finca. */
 export function canRate(user, task) {
   if (!user || !task) return false;
   if (!ZONES[task.zone]?.rating) return false;
-  if (task.status !== 'done') return false;
+  if (task.status !== 'done' && task.status !== 'auditado') return false;
   return hasRole(user, 'auditor', 'gerente');
+}
+
+/** Mover a la columna "Auditado": exclusivo del Gerente y solo en zonas con calificación. */
+export function canMoveToAudit(user, task) {
+  if (!user || !task) return false;
+  if (!ZONES[task.zone]?.rating) return false;
+  return user.role === 'gerente';
 }
 
 /** Gestión de usuarios: Auditor cubre Cocina + Finca, Gerente todo, jefes su zona. */

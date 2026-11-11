@@ -56,8 +56,15 @@ export function canEditTask(user, task) {
 export function canRate(user, task) {
   if (!user || !task) return false;
   if (!ZONES[task.zone]?.rating) return false;
-  if (task.status !== 'done') return false;
+  if (task.status !== 'done' && task.status !== 'auditado') return false;
   return user.role === 'auditor' || user.role === 'gerente';
+}
+
+/** Mover a la columna "Auditado": exclusivo del Gerente y solo en zonas con calificación. */
+export function canMoveToAudit(user, task) {
+  if (!user || !task) return false;
+  if (!ZONES[task.zone]?.rating) return false;
+  return user.role === 'gerente';
 }
 
 /** Alta de usuarios: el Gerente crea cualquier rol; los jefes solo su personal. */

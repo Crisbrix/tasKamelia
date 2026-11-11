@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { KanbanSquare, LogOut, Users, Sparkles, Sun, Moon } from 'lucide-react';
+import { BarChart3, KanbanSquare, LogOut, Users, Sparkles, Sun, Moon } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { accentText } from '../../lib/theme';
@@ -8,6 +8,7 @@ import { ROLES, ZONES } from '../../lib/constants';
 import { manageableZones } from '../../lib/permissions';
 import { BoardPage } from '../../pages/BoardPage';
 import { UsersPage } from '../../pages/UsersPage';
+import { ReportPage } from '../../pages/ReportPage';
 
 function Brand() {
   return (
@@ -41,6 +42,7 @@ export function AppShell() {
   const navItems = [
     { id: 'board', label: 'Tablero', Icon: KanbanSquare },
     ...(manageableZones(user).length ? [{ id: 'users', label: 'Personal', Icon: Users }] : []),
+    ...(user.role === 'gerente' ? [{ id: 'report', label: 'Reportes', Icon: BarChart3 }] : []),
   ];
 
   return (
@@ -156,7 +158,13 @@ export function AppShell() {
             exit={{ opacity: 0, y: -10 }}
             transition={{ type: 'spring', stiffness: 260, damping: 30 }}
           >
-            {page === 'board' ? <BoardPage user={user} /> : <UsersPage user={user} />}
+            {page === 'board' ? (
+              <BoardPage user={user} />
+            ) : page === 'report' ? (
+              <ReportPage />
+            ) : (
+              <UsersPage user={user} />
+            )}
           </motion.div>
         </AnimatePresence>
       </main>

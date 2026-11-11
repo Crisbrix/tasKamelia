@@ -192,8 +192,8 @@ export function createMemoryStore() {
       const task = tasks.find((x) => x.id === Number(id));
       if (!task) return null;
       Object.assign(task, patch);
-      if (patch.status === 'done' && !task.completedAt) task.completedAt = new Date().toISOString();
-      if (patch.status && patch.status !== 'done') task.completedAt = null;
+      if ((patch.status === 'done' || patch.status === 'auditado') && !task.completedAt) task.completedAt = new Date().toISOString();
+      if (patch.status && patch.status !== 'done' && patch.status !== 'auditado') task.completedAt = null;
       return this.findTask(task.id);
     },
 
@@ -217,6 +217,26 @@ export function createMemoryStore() {
       return this.findTask(taskId);
     },
 
+    listRatings() {
+      const uById = usersById();
+      const tById = new Map(tasks.map((t) => [t.id, t]));
+      return ratings
+        .map((r) => {
+          const t = tById.get(r.taskId);
+          return {
+            id: r.id,
+            stars: r.stars,
+            comment: r.comment,
+            createdAt: r.createdAt,
+            taskId: r.taskId,
+            title: t?.title ?? '(tarea eliminada)',
+            zone: t?.zone ?? null,
+            ratedByName: uById.get(r.ratedBy)?.name ?? null,
+          };
+        })
+        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    },
+
     async overview() {
       const uById = usersById();
       const rByTask = ratingsByTask();
@@ -230,6 +250,7 @@ export function createMemoryStore() {
           todo: list.filter((t) => t.status === 'todo').length,
           doing: list.filter((t) => t.status === 'doing').length,
           done: done.length,
+          auditado: list.filter((t) => t.status === 'auditado').length,
           pendingReview: done.filter((t) => !rByTask.has(t.id)).length,
           avgStars: rated.length ? Number((rated.reduce((a, b) => a + b, 0) / rated.length).toFixed(1)) : null,
           staff: users.filter((u) => u.zone === zone).length,
