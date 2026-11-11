@@ -59,7 +59,7 @@ export function DeleteUserButton({ user, target, onDeleted }) {
         type="button"
         onClick={remove}
         disabled={loading}
-        className="rounded-lg bg-kamelia px-2.5 py-1 text-[11px] font-extrabold uppercase tracking-wider text-white transition hover:bg-kamelia-soft disabled:opacity-50"
+        className="rounded-lg bg-kamelia px-2.5 py-1 text-[11px] font-medium text-white transition hover:bg-kamelia-soft disabled:opacity-50"
       >
         {loading ? '…' : 'Eliminar'}
       </button>

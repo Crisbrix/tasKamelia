@@ -15,7 +15,7 @@ export function ThemeProvider({ children }) {
   useEffect(() => {
     document.documentElement.classList.toggle('light', theme === 'light');
     document.documentElement.classList.toggle('dark', theme === 'dark');
-    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', theme === 'light' ? '#EBEDF4' : '#06070A');
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', theme === 'light' ? '#F4F4F5' : '#09090B');
     try {
       localStorage.setItem(KEY, theme);
     } catch {

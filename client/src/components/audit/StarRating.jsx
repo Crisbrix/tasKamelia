@@ -51,24 +51,15 @@ export function StarRating({ value = 0, onChange, disabled = false, size = 18, s
               <Star
                 size={size}
                 strokeWidth={2}
-                fill={filled ? '#FFC400' : 'rgba(255,255,255,0.06)'}
-                stroke={filled ? '#FFC400' : emptyStroke}
+                fill={filled ? '#F59E0B' : 'rgba(255,255,255,0.06)'}
+                stroke={filled ? '#F59E0B' : emptyStroke}
               />
             </motion.span>
-            {filled && (
-              <motion.span
-                key={`glow-${star}`}
-                initial={{ opacity: 0, scale: 0.5 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="pointer-events-none absolute inset-1 rounded-md"
-                style={{ boxShadow: '0 0 16px rgba(255,196,0,0.55)' }}
-              />
-            )}
           </motion.button>
         );
       })}
       {showLabel && (
-        <span className="ml-2 text-[11px] font-extrabold uppercase tracking-wider text-neon-amber light:text-amber-700">
+        <span className="ml-2 text-[11px] font-medium text-neon-amber light:text-amber-700">
           {value ? `${value}.0 / 5` : 'Pendiente'}
         </span>
       )}

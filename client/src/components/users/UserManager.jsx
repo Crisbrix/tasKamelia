@@ -49,7 +49,7 @@ export function UserManager({ user, zone }) {
 
   if (!canManageUsers(user, zone)) {
     return (
-      <div className="glass grid place-items-center rounded-2xl py-16 text-center">
+      <div className="glass grid place-items-center rounded-xl py-16 text-center">
         <p className="text-sm font-bold text-zinc-400 light:text-zinc-500">No gestionas usuarios en {zoneInfo.label}</p>
       </div>
     );
@@ -75,10 +75,10 @@ export function UserManager({ user, zone }) {
 
   return (
     <div className="grid gap-5 lg:grid-cols-[1fr_360px]">
-      <section className="glass min-w-0 rounded-2xl p-5">
+      <section className="glass min-w-0 rounded-xl p-5">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-          <p className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest text-zinc-500">
-            <span className="h-2 w-2 rounded-full" style={{ background: zoneInfo.accent, boxShadow: `0 0 10px ${zoneInfo.accent}` }} />
+          <p className="flex items-center gap-2 text-[11px] font-medium text-zinc-500">
+            <span className="h-2 w-2 rounded-full" style={{ background: zoneInfo.accent }} />
             {staff.length} usuarios en {zoneInfo.label}
           </p>
           <div className="relative">
@@ -110,7 +110,7 @@ export function UserManager({ user, zone }) {
                   >
                     <div className="flex items-center gap-3">
                       <span
-                        className="grid h-10 w-10 shrink-0 place-items-center rounded-xl text-xs font-extrabold text-night-950"
+                        className="grid h-10 w-10 shrink-0 place-items-center rounded-xl text-xs font-semibold text-night-950"
                         style={{ background: role?.color || '#71717a' }}
                       >
                         {initials(member.name)}
@@ -143,11 +143,11 @@ export function UserManager({ user, zone }) {
         )}
       </section>
 
-      <section className="glass h-fit rounded-2xl border-t-2 p-5" style={{ borderTopColor: zoneInfo.accent }}>
-        <p className="mb-1 flex items-center gap-2 text-[11px] font-extrabold uppercase tracking-[0.2em]" style={{ color: accent }}>
+      <section className="glass h-fit rounded-xl border-t-2 p-5" style={{ borderTopColor: zoneInfo.accent }}>
+        <p className="mb-1 flex items-center gap-2 text-[11px] font-medium" style={{ color: accent }}>
           <Users size={13} /> Gestión de usuarios
         </p>
-        <h3 className="mb-4 text-lg font-extrabold tracking-tight text-white light:text-zinc-900">Crear en {zoneInfo.label}</h3>
+        <h3 className="mb-4 text-lg font-semibold tracking-tight text-white light:text-zinc-900">Crear en {zoneInfo.label}</h3>
         <form onSubmit={submit} className="space-y-3">
           <div>
             <label className="label">Nombre completo</label>

@@ -4,8 +4,6 @@ import { Crown, Loader2, Search, UserCog, UserPlus, Users } from 'lucide-react';
 import { api } from '../lib/api';
 import { ROLES, ROLE_LIST, ZONES, ZONE_LIST } from '../lib/constants';
 import { canDeleteUser, isAdmin, manageableZones } from '../lib/permissions';
-import { accentText } from '../lib/theme';
-import { useTheme } from '../context/ThemeContext';
 import { useToast } from '../components/ui/Toast';
 import { Button } from '../components/ui/Button';
 import { Select } from '../components/ui/Select';
@@ -16,16 +14,15 @@ const EMPTY = { name: '', email: '', password: '', role: '', zone: '', station: 
 
 export function UsersPage({ user }) {
   const toast = useToast();
-  const { isLight } = useTheme();
   const zones = manageableZones(user);
   const tabs = isAdmin(user) ? ['all', ...zones] : zones;
   const [tab, setTab] = useState(tabs[0]);
 
   if (!zones.length) {
     return (
-      <div className="glass grid place-items-center rounded-2xl py-20 text-center">
+      <div className="glass grid place-items-center rounded-xl py-20 text-center">
         <Users className="mb-3 text-zinc-600" />
-        <p className="text-lg font-extrabold text-white light:text-zinc-900">Sin módulo de personal</p>
+        <p className="text-lg font-semibold text-white light:text-zinc-900">Sin módulo de personal</p>
         <p className="text-sm text-zinc-400 light:text-zinc-500">Tu rol no gestiona usuarios de ninguna zona.</p>
       </div>
     );
@@ -35,7 +32,7 @@ export function UsersPage({ user }) {
     <div className="space-y-5">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="flex items-center gap-2 text-2xl font-extrabold tracking-tight text-white light:text-zinc-900">
+          <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight text-white light:text-zinc-900">
             <UserCog size={22} className="text-neon-amber" /> Gestión de usuarios
           </h1>
           <p className="mt-1 text-sm text-zinc-400 light:text-zinc-500">
@@ -47,18 +44,17 @@ export function UsersPage({ user }) {
         <div className="glass flex gap-1 rounded-xl p-1">
           {tabs.map((t) => {
             const active = tab === t;
-            const accent = accentText(t === 'all' ? '#FFC400' : ZONES[t].accent, isLight);
             return (
-              <button key={t} type="button" onClick={() => setTab(t)} className="relative rounded-lg px-4 py-2 text-sm font-bold outline-none">
+              <button key={t} type="button" onClick={() => setTab(t)} className="relative rounded-md px-3.5 py-1.5 text-sm font-medium outline-none">
                 {active && (
                   <motion.span
                     layoutId="users-tab"
                     transition={{ type: 'spring', stiffness: 320, damping: 34 }}
                     className="absolute inset-0 rounded-lg"
-                    style={{ background: `${accent}26`, boxShadow: `inset 0 0 0 1px ${accent}66` }}
+                    style={{ background: 'rgba(127,127,140,0.16)' }}
                   />
                 )}
-                <span className="relative z-10" style={{ color: active ? accent : '#71717a' }}>
+                <span className={`relative z-10 ${active ? 'text-zinc-50 light:text-zinc-900' : 'text-zinc-500'}`}>
                   {t === 'all' ? 'Directorio' : ZONES[t].label}
                 </span>
               </button>
@@ -128,11 +124,11 @@ function Directory({ user }) {
 
   return (
     <div className="grid gap-5 lg:grid-cols-[360px_1fr]">
-      <section className="glass h-fit rounded-2xl p-5">
-        <p className="mb-1 flex items-center gap-2 text-[11px] font-extrabold uppercase tracking-[0.2em] text-neon-amber">
+      <section className="glass h-fit rounded-xl p-5">
+        <p className="mb-1 flex items-center gap-2 text-[11px] font-medium text-neon-amber">
           <Crown size={13} /> Super Admin
         </p>
-        <h2 className="mb-4 text-lg font-extrabold tracking-tight text-white light:text-zinc-900">Crear usuario</h2>
+        <h2 className="mb-4 text-lg font-semibold tracking-tight text-white light:text-zinc-900">Crear usuario</h2>
         <form onSubmit={submit} className="space-y-3">
           <div>
             <label className="label">Nombre completo</label>
@@ -153,7 +149,7 @@ function Directory({ user }) {
               onChange={(role) => setForm((f) => ({ ...f, role, zone: ROLES[role]?.zone || '', station: '' }))}
               options={roleOptions}
               placeholder="Seleccionar rol…"
-              accent="#FFC400"
+              accent="#F59E0B"
             />
           </div>
           <div>
@@ -161,8 +157,8 @@ function Directory({ user }) {
             <Select
               value={form.zone}
               onChange={(zone) => setForm((f) => ({ ...f, zone, station: '' }))}
-              options={[{ value: '', label: 'Sin zona (global)', color: '#FFC400' }, ...ZONE_LIST.map((z) => ({ value: z.id, label: z.label, color: z.accent }))]}
-              accent={form.zone ? ZONES[form.zone]?.accent : '#FFC400'}
+              options={[{ value: '', label: 'Sin zona (global)', color: '#F59E0B' }, ...ZONE_LIST.map((z) => ({ value: z.id, label: z.label, color: z.accent }))]}
+              accent={form.zone ? ZONES[form.zone]?.accent : '#F59E0B'}
             />
             {zoneOfRole && form.zone !== zoneOfRole && (
               <p className="mt-1.5 text-[11px] font-semibold text-neon-orange">Este rol pertenece a la zona {ZONES[zoneOfRole].label}</p>
@@ -187,9 +183,9 @@ function Directory({ user }) {
         </form>
       </section>
 
-      <section className="glass rounded-2xl p-5">
+      <section className="glass rounded-xl p-5">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-          <h2 className="text-lg font-extrabold tracking-tight text-white light:text-zinc-900">
+          <h2 className="text-lg font-semibold tracking-tight text-white light:text-zinc-900">
             {users.length} usuarios <span className="text-sm font-semibold text-zinc-500">· {filtered.length} visibles</span>
           </h2>
           <div className="flex flex-wrap items-center gap-2">
@@ -227,7 +223,7 @@ function Directory({ user }) {
                 >
                   <div className="flex items-center gap-3">
                     <span
-                      className="grid h-10 w-10 shrink-0 place-items-center rounded-xl text-xs font-extrabold text-night-950"
+                      className="grid h-10 w-10 shrink-0 place-items-center rounded-xl text-xs font-semibold text-night-950"
                       style={{ background: role?.color || '#71717a' }}
                     >
                       {u.name.split(' ').map((n) => n[0]).slice(0, 2).join('').toUpperCase()}

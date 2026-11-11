@@ -1,9 +1,9 @@
 import { forwardRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useDraggable } from '@dnd-kit/core';
-import { Check, ChevronDown, Flame, Lock, Pencil, Sparkles, Trash2, X } from 'lucide-react';
-import { PRIORITY_MAP, ZONES } from '../../lib/constants';
-import { canEditTask, canDeleteTask, canRate } from '../../lib/permissions';
+import { ArrowRight, Check, Pencil, Sparkles, Trash2, X } from 'lucide-react';
+import { PRIORITY_MAP, STATUS_MAP, ZONES } from '../../lib/constants';
+import { canEditTask, canDeleteTask, canRate, nextStatus } from '../../lib/permissions';
 import { useIsMobile } from '../../lib/hooks';
 import { StarRating } from '../audit/StarRating';
 
@@ -15,205 +15,176 @@ const initials = (name = '?') =>
     .join('')
     .toUpperCase();
 
-function Avatar({ name }) {
+export function Avatar({ name, size = 'h-6 w-6 text-[10px]' }) {
   return (
-    <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-white/10 text-[10px] font-extrabold text-white ring-1 ring-white/15 light:bg-zinc-900 light:text-white light:ring-black/10">
+    <span
+      title={name}
+      className={`grid shrink-0 place-items-center rounded-full bg-zinc-700 font-semibold text-zinc-100 light:bg-zinc-200 light:text-zinc-700 ${size}`}
+    >
       {initials(name || '?')}
     </span>
   );
 }
 
-export function TaskCardView({ task, user, flash = false, overlay = false, dimmed = false, onRate, onOpenRating, onEdit, onDelete }) {
+/** Texto del botón de avance según el estado destino. */
+export const STEP_LABEL = {
+  doing: 'Empezar',
+  done: 'Terminar',
+  auditado: 'Auditar',
+};
+
+const iconBtn =
+  'rounded-md p-1.5 text-zinc-500 transition hover:bg-white/[0.08] hover:text-zinc-100 light:hover:bg-black/5 light:hover:text-zinc-900';
+
+export function TaskCardView({ task, user, flash = false, overlay = false, dimmed = false, onMove, onOpenRating, onOpenActions, onEdit, onDelete }) {
   const zone = ZONES[task.zone];
   const priority = PRIORITY_MAP[task.priority] || PRIORITY_MAP.media;
   const auditable = (task.status === 'done' || task.status === 'auditado') && zone.rating;
   const mayRate = auditable && canRate(user, task);
   const mayEdit = !overlay && canEditTask(user, task);
   const mayDelete = !overlay && canDeleteTask(user, task);
+  const next = overlay ? null : nextStatus(user, task);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const isMobile = useIsMobile();
-  const [open, setOpen] = useState(false);
-  // Mobile-first: tarjeta minimalista, los detalles se despliegan al tocar.
-  const expanded = !isMobile || open;
+  const finished = task.status === 'done' || task.status === 'auditado';
 
-  const toggle = () => {
-    if (isMobile && !overlay) setOpen((v) => !v);
+  // En mobile tocar la tarjeta abre la hoja de acciones (mover, calificar, editar).
+  const openActions = () => {
+    if (isMobile && !overlay) onOpenActions?.(task);
   };
+
+  const stepButton = next && !flash && (
+    <button
+      type="button"
+      onPointerDown={(e) => e.stopPropagation()}
+      onClick={(e) => {
+        e.stopPropagation();
+        onMove?.(task, next);
+      }}
+      className="flex h-8 shrink-0 items-center gap-1 rounded-md border border-white/[0.09] bg-white/[0.04] px-2.5 text-xs font-medium text-zinc-200 transition hover:border-white/[0.18] hover:bg-white/[0.08] active:scale-[0.96] light:border-black/[0.09] light:bg-black/[0.02] light:text-zinc-700 light:hover:bg-black/[0.05] md:h-7 md:px-2"
+    >
+      {STEP_LABEL[next]}
+      <ArrowRight size={13} style={{ color: STATUS_MAP[next].accent }} />
+    </button>
+  );
+
+  const hoverTools = !isMobile && (mayEdit || mayDelete) && !flash && (
+    <span className="flex items-center" onPointerDown={(e) => e.stopPropagation()}>
+      {mayEdit && (
+        <button type="button" title="Editar tarea" aria-label="Editar tarea" onClick={() => onEdit?.(task)} className={iconBtn}>
+          <Pencil size={13} />
+        </button>
+      )}
+      {mayDelete &&
+        (confirmDelete ? (
+          <>
+            <button
+              type="button"
+              onClick={() => {
+                setConfirmDelete(false);
+                onDelete?.(task);
+              }}
+              className="rounded bg-kamelia-deep px-2 py-1 text-[11px] font-semibold text-white"
+            >
+              Eliminar
+            </button>
+            <button type="button" aria-label="Cancelar" onClick={() => setConfirmDelete(false)} className={iconBtn}>
+              <X size={13} />
+            </button>
+          </>
+        ) : (
+          <button
+            type="button"
+            title="Eliminar tarea"
+            aria-label="Eliminar tarea"
+            onClick={() => setConfirmDelete(true)}
+            className={`${iconBtn} hover:!text-kamelia`}
+          >
+            <Trash2 size={13} />
+          </button>
+        ))}
+    </span>
+  );
 
   return (
     <motion.article
       layout={!overlay}
-      initial={{ opacity: 0, y: 10, scale: 0.98 }}
-      animate={{ opacity: dimmed ? 0.32 : 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.18 } }}
-      transition={{ type: 'spring', stiffness: 320, damping: 32 }}
-      whileHover={overlay ? undefined : { y: -3, scale: 1.01 }}
-      onClick={toggle}
-      className={`group relative overflow-hidden rounded-2xl border border-white/10 bg-white/[0.05] p-3.5 backdrop-blur-md transition-colors hover:border-white/20 light:border-black/10 light:bg-white light:hover:border-black/25 ${
-        overlay ? 'w-[280px] rotate-[-2deg] shadow-pop ring-2 ring-kamelia/60' : ''
+      initial={{ opacity: 0, y: 6 }}
+      animate={{ opacity: dimmed ? 0.35 : 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.97, transition: { duration: 0.15 } }}
+      transition={{ type: 'spring', stiffness: 400, damping: 36 }}
+      onClick={openActions}
+      className={`group relative rounded-lg border border-white/[0.07] bg-night-800 px-3 py-2.5 transition-colors hover:border-white/[0.14] light:border-black/[0.08] light:bg-white light:hover:border-black/[0.16] ${
+        overlay ? 'w-[280px] rotate-[-1.5deg] border-white/20 shadow-pop light:border-black/20' : 'shadow-glow light:shadow-[0_1px_2px_rgba(9,9,11,0.05)]'
       }`}
-      style={{ boxShadow: `inset 3px 0 0 ${zone.accent}` }}
     >
-      {(mayEdit || mayDelete) && !flash && (
-        <div
-          className={`absolute right-2 top-2 z-10 flex items-center gap-0.5 rounded-lg border border-white/10 bg-black/60 p-0.5 backdrop-blur-md transition light:border-black/10 light:bg-white/90 md:opacity-0 md:group-hover:opacity-100 ${
-            open ? 'opacity-100' : 'opacity-0'
+      <div className="flex min-h-[32px] items-center gap-2 md:min-h-[28px]">
+        <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: priority.color }} title={`Prioridad ${priority.label.toLowerCase()}`} />
+        <h3
+          className={`min-w-0 flex-1 text-[13.5px] font-medium leading-snug ${
+            finished ? 'text-zinc-400 light:text-zinc-500' : 'text-zinc-100 light:text-zinc-900'
           }`}
-          onPointerDown={(e) => e.stopPropagation()}
-          onClick={(e) => e.stopPropagation()}
         >
-          {mayEdit && (
-            <button
-              type="button"
-              title="Editar tarea"
-              aria-label="Editar tarea"
-              onClick={(e) => {
-                e.stopPropagation();
-                onEdit?.(task);
-              }}
-              className="rounded-md p-1.5 text-zinc-400 transition hover:bg-white/10 hover:text-white light:hover:bg-black/5 light:hover:text-zinc-900"
-            >
-              <Pencil size={13} />
-            </button>
-          )}
-          {mayDelete &&
-            (confirmDelete ? (
-              <>
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setConfirmDelete(false);
-                    onDelete?.(task);
-                  }}
-                  className="rounded-md bg-kamelia px-2 py-1 text-[10px] font-extrabold uppercase text-white"
-                >
-                  Sí
-                </button>
-                <button
-                  type="button"
-                  aria-label="Cancelar"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setConfirmDelete(false);
-                  }}
-                  className="rounded-md p-1 text-zinc-400 transition hover:bg-white/10 hover:text-white light:hover:bg-black/5 light:hover:text-zinc-900"
-                >
-                  <X size={13} />
-                </button>
-              </>
-            ) : (
-              <button
-                type="button"
-                title="Eliminar tarea"
-                aria-label="Eliminar tarea"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setConfirmDelete(true);
-                }}
-                className="rounded-md p-1.5 text-zinc-400 transition hover:bg-kamelia/15 hover:text-kamelia"
-              >
-                <Trash2 size={13} />
-              </button>
-            ))}
-        </div>
-      )}
-      <div className="mb-2 flex items-start justify-between gap-2">
-        <span className="chip border" style={{ color: zone.accent, borderColor: `${zone.accent}55`, background: `${zone.accent}15` }}>
-          {task.area}
-        </span>
-        <span className="chip shrink-0" style={{ color: priority.color, background: `${priority.color}1A` }}>
-          {task.priority === 'alta' && <Flame size={11} />}
-          {priority.label}
-        </span>
+          {task.title}
+        </h3>
+        {task.assigneeName && <Avatar name={task.assigneeName} size="h-6 w-6 text-[9px]" />}
+        {(stepButton || hoverTools) && (
+          <span className="flex items-center gap-1 transition md:hidden md:group-hover:flex md:group-focus-within:flex">
+            {hoverTools}
+            {stepButton}
+          </span>
+        )}
       </div>
 
-      <h3 className="text-[13.5px] font-bold leading-snug text-white light:text-zinc-900">{task.title}</h3>
+      {task.description && (
+        <p className="mt-0.5 line-clamp-2 pl-4 text-xs leading-relaxed text-zinc-500">{task.description}</p>
+      )}
 
-      <motion.div
-        initial={false}
-        animate={{ height: expanded ? 'auto' : 0, opacity: expanded ? 1 : 0 }}
-        transition={{ type: 'spring', stiffness: 340, damping: 34 }}
-        className="overflow-hidden"
-      >
-        <div className="pt-1.5">
-          {task.description && <p className="line-clamp-2 text-[11.5px] leading-relaxed text-zinc-400 light:text-zinc-500">{task.description}</p>}
-
-          <div className="mt-3 flex items-center justify-between gap-2">
-            <span className="flex min-w-0 items-center gap-1.5">
-              <Avatar name={task.assigneeName || 'Sin'} />
-              <span className="truncate text-[11px] font-semibold text-zinc-300 light:text-zinc-600">{task.assigneeName || 'Sin asignar'}</span>
+      {(task.priority === 'alta' || task.status === 'auditado') && (
+        <div className="mt-2 flex items-center gap-1.5 pl-4">
+          {task.priority === 'alta' && (
+            <span className="chip" style={{ color: priority.color, background: `${priority.color}1A` }}>
+              Urgente
             </span>
-            {task.status === 'done' && !zone.rating && <span className="chip bg-neon-green/15 text-neon-green light:text-[#00875A]">Listo</span>}
-            {task.status === 'auditado' && <span className="chip bg-neon-amber/15 text-neon-amber light:text-amber-700">Auditado</span>}
-          </div>
-
-          {auditable && (
-            <div className="mt-3 border-t border-white/10 pt-2.5 light:border-black/10">
-              <div className="flex items-center justify-between gap-2">
-                <StarRating value={task.rating?.stars || 0} size={14} />
-                {mayRate ? (
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onOpenRating?.(task);
-                    }}
-                    className="flex items-center gap-1 rounded-lg px-2 py-1 text-[10px] font-extrabold uppercase tracking-wider text-neon-amber transition hover:bg-neon-amber/10 light:text-amber-700"
-                  >
-                    <Sparkles size={11} /> {task.rating ? 'Recalificar' : 'Calificar'}
-                  </button>
-                ) : task.rating ? (
-                  <span className="text-[10px] font-semibold text-zinc-500">por {task.rating.ratedByName || 'Auditoría'}</span>
-                ) : (
-                  <span className="flex items-center gap-1.5 text-[10px] font-semibold text-zinc-500">
-                    <Lock size={11} /> Pendiente
-                  </span>
-                )}
-              </div>
-            </div>
+          )}
+          {task.status === 'auditado' && (
+            <span className="chip bg-neon-amber/10 text-neon-amber light:text-amber-700">
+              <Check size={11} /> Auditada
+            </span>
           )}
         </div>
-      </motion.div>
+      )}
 
-      {isMobile && !overlay && (
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            setOpen((v) => !v);
-          }}
-          className="mt-2 flex w-full items-center justify-center gap-1 rounded-lg py-1 text-[10px] font-extrabold uppercase tracking-wider text-zinc-500 transition hover:text-zinc-300 light:hover:text-zinc-700"
-        >
-          {open ? 'Menos' : 'Detalles'}
-          <motion.span
-            animate={{ rotate: open ? 180 : 0 }}
-            transition={{ type: 'spring', stiffness: 420, damping: 24 }}
-            style={{ transform: 'translateZ(0)' }}
-            className="block"
-          >
-            <ChevronDown size={12} />
-          </motion.span>
-        </button>
+      {auditable && (
+        <div className="mt-2.5 flex items-center justify-between gap-2 border-t border-white/[0.06] pl-4 pt-2 light:border-black/[0.06]">
+          <StarRating value={task.rating?.stars || 0} size={13} />
+          {mayRate ? (
+            <button
+              type="button"
+              onPointerDown={(e) => e.stopPropagation()}
+              onClick={(e) => {
+                e.stopPropagation();
+                onOpenRating?.(task);
+              }}
+              className="flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-neon-amber transition hover:bg-neon-amber/10 light:text-amber-700"
+            >
+              <Sparkles size={12} /> {task.rating ? 'Recalificar' : 'Calificar'}
+            </button>
+          ) : (
+            <span className="text-[11px] text-zinc-500">
+              {task.rating ? `por ${task.rating.ratedByName || 'Auditoría'}` : 'Pendiente de auditoría'}
+            </span>
+          )}
+        </div>
       )}
 
       {flash && (
-        <>
-          <motion.span
-            initial={{ opacity: 0.95, scale: 0.82 }}
-            animate={{ opacity: 0, scale: 1.14 }}
-            transition={{ duration: 0.7, ease: 'easeOut' }}
-            className="pointer-events-none absolute inset-0 rounded-2xl border-2 border-neon-green"
-          />
-          <motion.span
-            initial={{ scale: 0, rotate: -50 }}
-            animate={{ scale: [0, 1.3, 1], rotate: 0 }}
-            transition={{ duration: 0.5, times: [0, 0.6, 1] }}
-            className="absolute right-2.5 top-2.5 grid h-7 w-7 place-items-center rounded-full bg-neon-green text-night-950 shadow-[0_0_24px_rgba(0,230,118,0.8)]"
-          >
-            <Check size={16} strokeWidth={3.5} />
-          </motion.span>
-        </>
+        <motion.span
+          initial={{ opacity: 1 }}
+          animate={{ opacity: 0 }}
+          transition={{ duration: 1.1, ease: 'easeOut' }}
+          className="pointer-events-none absolute inset-0 rounded-lg ring-2 ring-neon-green"
+        />
       )}
     </motion.article>
   );
@@ -237,7 +208,7 @@ export const TaskCard = forwardRef(function TaskCard({ task, draggable = true, .
       ref={setRefs}
       {...listeners}
       {...attributes}
-      className={`cursor-grab active:cursor-grabbing ${!draggable ? 'cursor-default' : ''}`}
+      className={draggable ? 'cursor-grab active:cursor-grabbing' : 'cursor-default'}
     >
       <TaskCardView task={task} dimmed={isDragging} {...rest} />
     </div>

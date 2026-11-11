@@ -34,13 +34,13 @@ export function Login() {
         className="glass relative z-10 w-full max-w-md rounded-3xl p-8"
       >
         <div className="mb-7 flex items-center gap-3">
-          <div className="grid h-11 w-11 place-items-center rounded-2xl bg-kamelia shadow-glow-brand">
+          <div className="grid h-11 w-11 place-items-center rounded-xl bg-kamelia">
             <svg viewBox="0 0 24 24" className="h-6 w-6 text-white" fill="currentColor">
               <path d="M12 2c1.8 2.2 2.7 4 2.7 5.6 1.6-1 3.5-1.4 5.6-1.2-.4 2.1-1.4 3.8-2.9 5 1.5 1.2 2.5 2.9 2.9 5-2.1.2-4-.2-5.6-1.2 0 1.6-.9 3.4-2.7 5.6-1.8-2.2-2.7-4-2.7-5.6-1.6 1-3.5 1.4-5.6 1.2.4-2.1 1.4-3.8 2.9-5-1.5-1.2-2.5-2.9-2.9-5 2.1-.2 4 .2 5.6 1.2C9.3 6 10.2 4.2 12 2Z" />
             </svg>
           </div>
           <div>
-            <h1 className="text-xl font-extrabold tracking-tight text-white light:text-zinc-900">Tareas Kamelia</h1>
+            <h1 className="text-xl font-semibold tracking-tight text-white light:text-zinc-900">Tareas Kamelia</h1>
             <p className="text-xs font-medium text-zinc-400 light:text-zinc-500">Operación · Roles · Auditoría</p>
           </div>
         </div>

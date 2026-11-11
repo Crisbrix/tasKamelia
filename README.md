@@ -2,7 +2,7 @@
 
 Aplicación web de **gestión operativa, control de roles (RBAC) y auditoría de tareas** dividida por zonas de importancia, con tablero Kanban arrastrable, calificación por estrellas y panel de administración de usuarios.
 
-Interfaz **dark mode de alto contraste** (sin colores pastel) con **modo claro** alternable desde el header (☀/🌙, se guarda en `localStorage`), animaciones con **físicas de resorte (spring)**, **glassmorphism** sutil y transiciones dinámicas en pestañas, tarjetas y modales. Los menús desplegables usan fondo **sólido** (`.menu`) en ambos temas para máxima legibilidad, y los acentos de texto se oscurecen automáticamente en modo claro (`lib/theme.js`) para mantener el contraste.
+Interfaz **sobria y profesional** (estilo Linear/Vercel): superficies sólidas con bordes finos, tipografía **Geist**, paleta contenida (rosa Kamelia solo como acento de marca) y sin brillos neón. **Modo oscuro** por defecto y **modo claro** alternable desde el header (☀/🌙, se guarda en `localStorage`), con animaciones de resorte (spring) cortas en pestañas, tarjetas y hojas. Los menús desplegables usan fondo **sólido** (`.menu`) en ambos temas para máxima legibilidad, y los acentos de texto se oscurecen automáticamente en modo claro (`lib/theme.js`) para mantener el contraste.
 
 ---
 
@@ -12,7 +12,7 @@ Interfaz **dark mode de alto contraste** (sin colores pastel) con **modo claro**
 | --- | --- |
 | Frontend | React 18 + Vite + Tailwind CSS 3 |
 | Animaciones | Framer Motion (springs, `layoutId`, `AnimatePresence`) |
-| Drag & Drop | `@dnd-kit/core` con `DragOverlay`, `MouseSensor` (8px) + `TouchSensor` (long-press 220ms, tolerancia 12px) y micro-feedback al soltar en "Hecho" |
+| Mover tareas | Escritorio/tablet: `@dnd-kit/core` con `DragOverlay` (`MouseSensor` 6px + `TouchSensor` 200ms). Todas las pantallas: botón de avance de un toque en la tarjeta (*Empezar → Terminar → Auditar*). Mobile: hoja inferior **Mover a…** al tocar la tarjeta |
 | Backend | Node.js + Express (ESM) |
 | Base de datos | **TiDB** (MySQL compatible vía `mysql2`) con **fallback automático a memoria** |
 | Auth | JWT (`jsonwebtoken`) + `bcryptjs` |
@@ -107,18 +107,18 @@ Abre <http://localhost:5173> e ingresa con tu cuenta (la pantalla de login no mu
 
 | # | Rol | Qué verificar |
 | --- | --- | --- |
-| 1 | Chef | Pestaña **Cocina** → botón *Nueva tarea* y *Personal* visibles; crea personal y tareas; arrastra una tarjeta a **Hecho** → micro-feedback (anillo verde + check) |
-| 2 | Chef | En tarjetas "Hecho" de Cocina aparece **"Pendiente"** con candado (no puedes calificar) |
+| 1 | Chef | Pestaña **Cocina** → botón *Nueva tarea* y *Personal* visibles; crea personal y tareas; arrastra una tarjeta a **Hecho** (o usa *Terminar*) → anillo verde de confirmación |
+| 2 | Chef | En tarjetas "Hecho" de Cocina aparece **"Pendiente de auditoría"** (no puedes calificar) |
 | 3 | Auditor | Entra a **Cocina**, tarjeta "Hecho" → las 5 estrellas se activan; al puntuar aparece toast ámbar y badge con tu nombre |
 | 4 | Auditor | Pestaña **Finca** → crea encargados desde *Personal*, asigna tarea y califícala al pasarla a Hecho |
 | 5 | Jefe de Meseros | **Comedor**: conforma el personal por estación (Derecho, Izquierdo, Palco y Chalet, Envase, Reciclaje, Carritos, Servilletero); las tarjetas Hecho **no** muestran estrellas |
 | 6 | Gerente | Menú **Personal → Directorio** → dropdown de rol + zona + estación; crea usuarios de cualquier rol y filtra el directorio |
-| 7 | Cualquiera | Cambia de pestaña → transición con blur/spring; el contador ámbar marca tareas sin revisar |
+| 7 | Cualquiera | Cambia de pestaña → transición spring; el contador ámbar en la zona marca tareas sin revisar |
 | 11 | Cualquiera | Botón ☀/🌙 en el header → modo claro con tarjetas blancas y mismo contraste; la elección persiste al recargar |
 | 12 | Gerente/Auditor | Tarjeta "Hecho" en Cocina/Finca → botón **Calificar** abre el modal con 5 estrellas (rebote al tocar), comentario opcional |
 | 13 | Gerente | Arrastra una tarea **Hecho → Auditado** (o marca "Mover a Auditado al guardar" en el modal); solo el Gerente puede hacerlo y solo con estrellas |
 | 14 | Gerente | Menú **Reportes** → promedio semanal de Cocina, tareas peor calificadas y gráfico de barras del historial de 8 semanas |
-| 15 | Cualquiera (móvil) | Pantalla <768px → Kanban en **carrusel horizontal** con swipe, indicadores sincronizados y tarjetas minimalistas (detalles al tocar) |
+| 15 | Cualquiera (móvil) | Pantalla <768px → una columna a la vez con pestañas de estado (conteo + nombre; también se cambia deslizando a los lados). Cada tarjeta trae su botón **Empezar/Terminar/Auditar**; tocar la tarjeta abre la hoja **Mover a…** (columnas bloqueadas muestran el motivo: *Solo el Gerente*, *Califícala primero*) con Calificar/Editar/Eliminar. La navegación pasa a una barra inferior |
 
 ### 3. Producción
 
@@ -155,7 +155,7 @@ task/
             ├── shell/AppShell.jsx
             ├── ui/{Button,Select,Modal,Toast}
             ├── ZoneTabs.jsx        # pestañas animadas + métricas
-            ├── kanban/{KanbanBoard,Column,TaskCard,TaskModal}
+            ├── kanban/{KanbanBoard,Column,TaskCard,TaskActionsSheet,TaskModal}
             ├── audit/{StarRating,RatingModal}.jsx
             ├── team/TeamPanel.jsx
             └── Login.jsx
@@ -188,4 +188,4 @@ task/
 
 - `npm run build --prefix client` → build de producción OK.
 - `npm test` → suite E2E (`scripts/rbac-test.mjs`), 55 aserciones, ejecutable de forma repetida.
-- Suite UI con Playwright (desktop 1440×900 + mobile 390×844 touch): 35 checks — 4 columnas, modal de calificación, drag Hecho→Auditado, checkbox del modal, página Reportes (8 barras + KPIs), modo claro, nav RBAC del Auditor, carrusel mobile (swipe CDP + indicador sincronizado) y consola sin errores JS.
+- Suite UI con Playwright (desktop 1440×900 + mobile 390×844 touch): 35 checks — 4 columnas, modal de calificación, drag Hecho→Auditado, checkbox del modal, página Reportes (8 barras + KPIs), modo claro, nav RBAC del Auditor, flujo mobile (botón de avance, hoja *Mover a…*, pestañas de estado) y consola sin errores JS.

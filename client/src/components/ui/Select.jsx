@@ -32,7 +32,7 @@ export function Select({ value, onChange, options, placeholder = 'Seleccionar…
       >
         <span className="flex min-w-0 items-center gap-2">
           {selected?.color && (
-            <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: selected.color, boxShadow: `0 0 12px ${selected.color}` }} />
+            <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: selected.color }} />
           )}
           <span className={`truncate ${selected ? 'text-white light:text-zinc-900' : 'text-zinc-500'}`}>{selected?.label || placeholder}</span>
         </span>
@@ -73,7 +73,7 @@ export function Select({ value, onChange, options, placeholder = 'Seleccionar…
                       )}
                       {opt.label}
                     </span>
-                    {active && <Check size={14} style={{ color: opt.color || '#FF2E63' }} />}
+                    {active && <Check size={14} style={{ color: opt.color || '#F43F5E' }} />}
                   </button>
                 </li>
               );

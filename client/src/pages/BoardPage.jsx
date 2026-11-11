@@ -3,8 +3,6 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { Plus, ShieldHalf, Users } from 'lucide-react';
 import { api } from '../lib/api';
 import { STATUSES, ZONES } from '../lib/constants';
-import { accentText } from '../lib/theme';
-import { useTheme } from '../context/ThemeContext';
 import { canCreateTask, canManageZone, canManageUsers, canMoveToAudit } from '../lib/permissions';
 import { useToast } from '../components/ui/Toast';
 import { Button } from '../components/ui/Button';
@@ -16,7 +14,6 @@ import { RatingModal } from '../components/audit/RatingModal';
 
 export function BoardPage({ user }) {
   const toast = useToast();
-  const { isLight } = useTheme();
   const [zoneId, setZoneId] = useState('cocina');
   const [cache, setCache] = useState({});
   const [overview, setOverview] = useState(null);
@@ -83,6 +80,16 @@ export function BoardPage({ user }) {
     return map;
   }, [zoneCache.tasks]);
 
+  // Al entrar a una zona, abrir la primera área que tenga tareas (una sola vez por zona).
+  const autoAreaRef = useRef({});
+  useEffect(() => {
+    if (autoAreaRef.current[zoneId] || !loadedRef.current[zoneId]) return;
+    autoAreaRef.current[zoneId] = true;
+    if (countByArea[zone.areas[0]]) return;
+    const first = zone.areas.find((a) => countByArea[a]);
+    if (first) setArea(first);
+  }, [zoneId, zone, countByArea]);
+
   const handleMove = async (task, status) => {
     if (task.status === status) return;
     if (status === 'auditado') {
@@ -122,6 +129,9 @@ export function BoardPage({ user }) {
           : `"${task.title}" completada`,
         zone.rating ? 'audit' : 'success',
       );
+    }
+    if (status === 'doing' && task.status === 'todo') {
+      toast.push(`"${task.title}" en Haciendo`, 'info');
     }
     if (status === 'auditado' && task.status !== 'auditado') {
       toast.push(`"${task.title}" auditada y cerrada`, 'audit');
@@ -171,18 +181,21 @@ export function BoardPage({ user }) {
   const showCreate = canCreateTask(user, zoneId);
 
   return (
-    <div className="space-y-6">
-      <div className="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-end">
-        <ZoneTabs value={zoneId} onChange={setZoneId} overview={overview} />
-        <div className="flex flex-wrap items-center gap-2">
+    <div className="space-y-5">
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+        <div className="flex-1">
+          <ZoneTabs value={zoneId} onChange={setZoneId} overview={overview} />
+        </div>
+        <div className="flex items-center gap-2">
           {showTeam && (
-            <Button variant="outline" size="md" onClick={() => setTeamOpen(true)}>
+            <Button variant="outline" size="md" className="flex-1 lg:flex-none" onClick={() => setTeamOpen(true)}>
               <Users size={15} /> Personal
             </Button>
           )}
           {showCreate && (
             <Button
               size="md"
+              className="flex-1 lg:flex-none"
               onClick={() => {
                 setEditingTask(null);
                 setTaskModal(true);
@@ -197,83 +210,72 @@ export function BoardPage({ user }) {
       <AnimatePresence initial={false} mode="popLayout">
         <motion.div
           key={zoneId}
-          initial={{ opacity: 0, y: 14 }}
+          initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -10 }}
-          transition={{ type: 'spring', stiffness: 260, damping: 30 }}
-          className="space-y-5"
+          exit={{ opacity: 0 }}
+          transition={{ type: 'spring', stiffness: 380, damping: 40 }}
+          className="space-y-4"
         >
-          <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="hidden flex-col gap-3 sm:flex xl:flex-row xl:items-end xl:justify-between">
             <div>
-              <h1 className="flex items-center gap-2 text-2xl font-extrabold tracking-tight text-white light:text-zinc-900">
-                <span className="h-3 w-3 rounded-full" style={{ background: zone.accent, boxShadow: `0 0 16px ${zone.accent}` }} />
-                Zona {zone.label}
+              <h1 className="flex items-center gap-2.5 text-xl font-semibold tracking-tight text-white light:text-zinc-900">
+                {zone.label}
                 {zoneId === 'cocina' && (
-                  <span className="chip border border-kamelia/50 bg-kamelia/15 text-kamelia light:text-kamelia-deep">
+                  <span className="chip border border-kamelia/30 text-kamelia light:text-kamelia-deep">
                     <ShieldHalf size={11} /> Prioridad máxima
                   </span>
                 )}
               </h1>
-              <p className="mt-1 text-sm text-zinc-400 light:text-zinc-500">{zone.description}</p>
+              <p className="mt-0.5 hidden text-sm text-zinc-500 sm:block">{zone.description}</p>
             </div>
             <StatsBar zone={zone} overview={overview} />
           </div>
 
-          <div className="glass flex flex-wrap gap-1 rounded-2xl p-1.5" role="tablist" aria-label={`Áreas de ${zone.label}`}>
-            {zone.areas.map((a) => {
-              const active = area === a;
-              return (
-                <button
-                  key={a}
-                  type="button"
-                  role="tab"
-                  aria-selected={active}
-                  onClick={() => setArea(a)}
-                  className="relative flex-1 whitespace-nowrap rounded-xl px-4 py-2 outline-none transition focus-visible:ring-2 focus-visible:ring-white/40"
-                >
-                  {active && (
-                    <motion.span
-                      layoutId="area-tab-pill"
-                      transition={{ type: 'spring', stiffness: 320, damping: 34 }}
-                      className="absolute inset-0 rounded-xl"
-                      style={{ background: `${zone.accent}26`, boxShadow: `inset 0 0 0 1px ${zone.accent}66` }}
-                    />
-                  )}
-                  <span
-                    className="relative z-10 flex items-center justify-center gap-2 text-[13px] font-extrabold"
-                    style={{ color: active ? accentText(zone.accent, isLight) : '#71717a' }}
+          <div className="no-scrollbar -mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
+            <div className="flex w-max gap-1 border-b border-white/[0.07] light:border-black/[0.08] sm:w-full" role="tablist" aria-label={`Áreas de ${zone.label}`}>
+              {zone.areas.map((a) => {
+                const active = area === a;
+                return (
+                  <button
+                    key={a}
+                    type="button"
+                    role="tab"
+                    aria-selected={active}
+                    onClick={() => setArea(a)}
+                    className={`relative flex items-center gap-1.5 whitespace-nowrap px-3 pb-2.5 pt-1.5 text-[13px] font-medium outline-none transition focus-visible:text-white ${
+                      active ? 'text-zinc-50 light:text-zinc-900' : 'text-zinc-500 hover:text-zinc-300 light:hover:text-zinc-700'
+                    }`}
                   >
                     {a}
-                    <span
-                      className="grid h-5 min-w-5 place-items-center rounded-full px-1 text-[10px]"
-                      style={
-                        active
-                          ? { background: zone.accent, color: '#06070A' }
-                          : { background: 'rgba(127,127,140,0.18)', color: '#8A90A2' }
-                      }
-                    >
-                      {countByArea[a] || 0}
-                    </span>
-                  </span>
-                </button>
-              );
-            })}
+                    <span className="tabular-nums text-xs text-zinc-500">{countByArea[a] || 0}</span>
+                    {active && (
+                      <motion.span
+                        layoutId="area-tab-line"
+                        transition={{ type: 'spring', stiffness: 420, damping: 38 }}
+                        className="absolute inset-x-2 -bottom-px h-0.5 rounded-full"
+                        style={{ background: zone.accent }}
+                      />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           {loading ? (
-            <div className={`grid gap-4 ${gridClass}`}>
-              {statuses.map((s) => (
-                <div key={s.id} className="glass h-[420px] animate-pulse rounded-2xl opacity-60" />
+            <div className={`grid gap-3 ${gridClass}`}>
+              {statuses.map((s, i) => (
+                <div key={s.id} className={`h-[360px] animate-pulse rounded-xl bg-white/[0.03] light:bg-black/[0.04] ${i > 0 ? 'hidden md:block' : ''}`} />
               ))}
             </div>
           ) : (
             <KanbanBoard
+              key={zoneId}
               tasks={visibleTasks}
               user={user}
               statuses={statuses}
               flashId={flashId}
               onMove={handleMove}
-              onRate={handleRate}
               onOpenRating={setRatingTask}
               onEdit={(task) => {
                 setEditingTask(task);

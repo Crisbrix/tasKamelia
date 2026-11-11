@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
-import { animate, motion, useMotionValue } from 'framer-motion';
+import { useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import {
   DndContext,
   DragOverlay,
@@ -14,108 +14,138 @@ import { STATUSES } from '../../lib/constants';
 import { useIsMobile } from '../../lib/hooks';
 import { Column } from './Column';
 import { TaskCardView } from './TaskCard';
+import { TaskActionsSheet } from './TaskActionsSheet';
 
 const gridClass = (n) => (n === 4 ? 'md:grid-cols-4' : 'md:grid-cols-3');
 
-export function KanbanBoard({
-  tasks,
-  user,
-  statuses = STATUSES,
-  flashId,
-  onMove,
-  onRate,
-  onOpenRating,
-  onEdit,
-  onDelete,
-}) {
+export function KanbanBoard({ tasks, user, statuses = STATUSES, flashId, onMove, onOpenRating, onEdit, onDelete }) {
   const [activeTask, setActiveTask] = useState(null);
+  const [actionsId, setActionsId] = useState(null);
+  const [tab, setTab] = useState(statuses[0].id);
+  const [direction, setDirection] = useState(0);
   const isMobile = useIsMobile();
 
-  // Mouse: arrastre tras 8px. Touch: long-press de 220ms — el swipe horizontal
-  // desplaza el carrusel sin activar el drag (tolerance cancela el gesto).
+  // Escritorio/tablet: arrastrar y soltar. En mobile no hay drag: se mueve con
+  // el botón de avance de la tarjeta o desde la hoja de acciones.
   const sensors = useSensors(
-    useSensor(MouseSensor, { activationConstraint: { distance: 8 } }),
-    useSensor(TouchSensor, { activationConstraint: { delay: 220, tolerance: 12 } }),
+    useSensor(MouseSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 8 } }),
     useSensor(KeyboardSensor),
   );
 
-  // --- Carrusel mobile (framer-motion, física de resorte) ---
-  const wrapRef = useRef(null);
-  const trackRef = useRef(null);
-  const x = useMotionValue(0);
-  const [bounds, setBounds] = useState({ left: 0, right: 0 });
-  const [index, setIndex] = useState(0);
-
-  useEffect(() => {
-    if (!isMobile) return undefined;
-    const measure = () => {
-      const wrap = wrapRef.current;
-      const track = trackRef.current;
-      if (!wrap || !track) return;
-      const left = Math.min(0, wrap.clientWidth - track.scrollWidth);
-      setBounds({ left, right: 0 });
-      x.set(Math.max(left, Math.min(0, x.get())));
-    };
-    measure();
-    window.addEventListener('resize', measure);
-    return () => window.removeEventListener('resize', measure);
-  }, [isMobile, statuses.length, tasks.length, x]);
+  const byStatus = (status) => tasks.filter((t) => t.status === status);
+  const actionsTask = tasks.find((t) => t.id === actionsId) || null;
+  const current = statuses.find((s) => s.id === tab) || statuses[0];
+  const tabIndex = statuses.indexOf(current);
 
   const goTo = (i) => {
-    const next = Math.max(0, Math.min(statuses.length - 1, i));
-    setIndex(next);
-    const wrap = wrapRef.current;
-    const track = trackRef.current;
-    const col = track?.children[next];
-    if (!wrap || !col) return;
-    const wrapRect = wrap.getBoundingClientRect();
-    const colRect = col.getBoundingClientRect();
-    const centered = colRect.left - wrapRect.left - (wrap.clientWidth - col.offsetWidth) / 2;
-    const target = Math.max(bounds.left, Math.min(0, x.get() - centered));
-    animate(x, target, { type: 'spring', stiffness: 300, damping: 34 });
+    const next = statuses[Math.max(0, Math.min(statuses.length - 1, i))];
+    if (!next || next.id === current.id) return;
+    setDirection(i > tabIndex ? 1 : -1);
+    setTab(next.id);
   };
 
-  const syncIndex = () => {
-    const wrap = wrapRef.current;
-    const track = trackRef.current;
-    if (!wrap || !track) return;
-    const wrapRect = wrap.getBoundingClientRect();
-    const center = wrapRect.left + wrapRect.width / 2;
-    let best = 0;
-    let bestDist = Infinity;
-    Array.from(track.children).forEach((col, i) => {
-      const r = col.getBoundingClientRect();
-      const d = Math.abs((r.left + r.right) / 2 - center);
-      if (d < bestDist) {
-        bestDist = d;
-        best = i;
-      }
-    });
-    setIndex(best);
+  const cardProps = {
+    user,
+    flashId,
+    onMove,
+    onOpenRating,
+    onEdit,
+    onDelete,
+    onOpenActions: (task) => setActionsId(task.id),
   };
 
-  // El indicador se sincroniza cuando el carrusel deja de moverse (momentum + resorte).
-  const syncRef = useRef(syncIndex);
-  syncRef.current = syncIndex;
-  useEffect(() => {
-    if (!isMobile) return undefined;
-    let timer;
-    const unsubscribe = x.on('change', () => {
-      clearTimeout(timer);
-      timer = setTimeout(() => syncRef.current(), 150);
-    });
-    return () => {
-      unsubscribe();
-      clearTimeout(timer);
-    };
-  }, [isMobile, x]);
+  const sheet = (
+    <TaskActionsSheet
+      task={actionsTask}
+      user={user}
+      statuses={statuses}
+      onClose={() => setActionsId(null)}
+      onMove={onMove}
+      onOpenRating={onOpenRating}
+      onEdit={onEdit}
+      onDelete={onDelete}
+    />
+  );
 
-  const byStatus = (status) => tasks.filter((t) => t.status === status);
+  if (isMobile) {
+    return (
+      <div>
+        <div
+          className="glass mb-3 flex gap-1 rounded-lg p-1"
+          role="tablist"
+          aria-label="Columnas"
+        >
+          {statuses.map((status, i) => {
+            const active = status.id === current.id;
+            return (
+              <button
+                key={status.id}
+                type="button"
+                role="tab"
+                aria-selected={active}
+                onClick={() => goTo(i)}
+                className="relative min-w-0 flex-1 rounded-md px-1 py-1.5 outline-none"
+              >
+                {active && (
+                  <motion.span
+                    layoutId="status-tab"
+                    transition={{ type: 'spring', stiffness: 420, damping: 36 }}
+                    className="absolute inset-0 rounded-md bg-white/[0.08] light:bg-black/[0.06]"
+                  />
+                )}
+                <span className={`relative block text-base font-semibold tabular-nums leading-tight ${active ? 'text-zinc-50 light:text-zinc-900' : 'text-zinc-500'}`}>
+                  {byStatus(status.id).length}
+                </span>
+                <span className="relative flex items-center justify-center gap-1 text-[11px] font-medium leading-tight">
+                  <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: status.accent }} />
+                  <span className={`truncate ${active ? 'text-zinc-300 light:text-zinc-700' : 'text-zinc-500'}`}>{status.label}</span>
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="overflow-hidden">
+          <AnimatePresence mode="popLayout" initial={false} custom={direction}>
+            <motion.div
+              key={current.id}
+              custom={direction}
+              variants={{
+                enter: (d) => ({ x: d * 40, opacity: 0 }),
+                center: { x: 0, opacity: 1 },
+                exit: (d) => ({ x: d * -40, opacity: 0 }),
+              }}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={{ type: 'spring', stiffness: 420, damping: 40 }}
+              drag="x"
+              dragDirectionLock
+              dragConstraints={{ left: 0, right: 0 }}
+              dragElastic={0.18}
+              dragSnapToOrigin
+              onDragEnd={(_, info) => {
+                // Deslizar a los lados cambia de columna.
+                if (info.offset.x < -70 || info.velocity.x < -450) goTo(tabIndex + 1);
+                else if (info.offset.x > 70 || info.velocity.x > 450) goTo(tabIndex - 1);
+              }}
+            >
+              <DndContext sensors={[]}>
+                <Column status={current} tasks={byStatus(current.id)} hideHeader className="!border-transparent !bg-transparent" {...cardProps} />
+              </DndContext>
+            </motion.div>
+          </AnimatePresence>
+        </div>
+        {sheet}
+      </div>
+    );
+  }
 
   const handleDragEnd = ({ active, over }) => {
     setActiveTask(null);
     if (!over) return;
-    const task = active.data?.current?.task || tasks.find((t) => String(t.id) === String(active.id).replace('task:', ''));
+    const task = active.data?.current?.task;
     if (!task) return;
     const target = String(over.id).startsWith('col:') ? String(over.id).slice(4) : null;
     if (!target || target === task.status) return;
@@ -130,67 +160,16 @@ export function KanbanBoard({
       onDragEnd={handleDragEnd}
       onDragCancel={() => setActiveTask(null)}
     >
-      <div ref={wrapRef} className="relative overflow-hidden md:overflow-visible">
-        <motion.div
-          ref={trackRef}
-          className={`flex gap-4 pb-1 md:grid md:gap-4 ${gridClass(statuses.length)}`}
-          style={isMobile ? { x } : undefined}
-          drag={isMobile && !activeTask ? 'x' : false}
-          dragConstraints={bounds}
-          dragElastic={0.12}
-          dragMomentum
-          dragTransition={{ power: 0.4, timeConstant: 170, bounceStiffness: 320, bounceDamping: 34 }}
-          onDragEnd={() => {
-            // sincronizar el indicador cuando el momentum y el resorte terminan
-            setTimeout(syncIndex, 450);
-          }}
-        >
-          {statuses.map((status) => (
-            <Column
-              key={status.id}
-              status={status}
-              className="w-[84vw] max-w-[360px] shrink-0 md:w-auto md:max-w-none md:shrink"
-              tasks={byStatus(status.id)}
-              user={user}
-              flashId={flashId}
-              onRate={onRate}
-              onOpenRating={onOpenRating}
-              onEdit={onEdit}
-              onDelete={onDelete}
-            />
-          ))}
-        </motion.div>
+      <div className={`grid items-start gap-3 ${gridClass(statuses.length)}`}>
+        {statuses.map((status) => (
+          <Column key={status.id} status={status} tasks={byStatus(status.id)} className="min-h-[360px]" {...cardProps} />
+        ))}
       </div>
 
-      {isMobile && (
-        <div className="mt-3 flex gap-1.5 overflow-x-auto px-1 pb-1" role="tablist" aria-label="Columnas">
-          {statuses.map((status, i) => (
-            <motion.button
-              key={status.id}
-              type="button"
-              role="tab"
-              aria-selected={i === index}
-              onClick={() => goTo(i)}
-              whileTap={{ scale: 0.9 }}
-              transition={{ type: 'spring', stiffness: 480, damping: 24 }}
-              className="flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1.5 text-[10px] font-extrabold uppercase tracking-wider"
-              style={
-                i === index
-                  ? { background: `${status.accent}1F`, color: status.accent, boxShadow: `inset 0 0 0 1px ${status.accent}66` }
-                  : { background: 'rgba(127,127,140,0.14)', color: '#8A90A2' }
-              }
-            >
-              <span className="h-1.5 w-1.5 rounded-full" style={{ background: i === index ? status.accent : 'currentColor' }} />
-              {status.label}
-              <span className="font-bold opacity-80">{byStatus(status.id).length}</span>
-            </motion.button>
-          ))}
-        </div>
-      )}
-
-      <DragOverlay dropAnimation={{ duration: 220, easing: 'cubic-bezier(0.18, 0.89, 0.32, 1.28)' }}>
-        {activeTask ? <TaskCardView task={activeTask} user={user} overlay onRate={onRate} /> : null}
+      <DragOverlay dropAnimation={{ duration: 180, easing: 'cubic-bezier(0.2, 0, 0, 1)' }}>
+        {activeTask ? <TaskCardView task={activeTask} user={user} overlay /> : null}
       </DragOverlay>
+      {sheet}
     </DndContext>
   );
 }

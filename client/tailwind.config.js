@@ -7,37 +7,33 @@ export default {
     extend: {
       colors: {
         night: {
-          950: '#06070A',
-          900: '#0A0B10',
-          850: '#0D0F15',
-          800: '#12141C',
-          700: '#191C26',
-          600: '#232734',
+          950: '#09090B',
+          900: '#0E0E11',
+          850: '#131316',
+          800: '#18181B',
+          700: '#202024',
+          600: '#2A2A2F',
         },
         kamelia: {
-          DEFAULT: '#FF2E63',
-          soft: '#FF5C86',
-          deep: '#D4145A',
+          DEFAULT: '#F43F5E',
+          soft: '#FB7185',
+          deep: '#E11D48',
         },
         neon: {
-          green: '#00E676',
-          blue: '#00B0FF',
-          amber: '#FFC400',
-          violet: '#7C4DFF',
-          orange: '#FF6B00',
+          green: '#10B981',
+          blue: '#3B82F6',
+          amber: '#F59E0B',
+          violet: '#8B5CF6',
+          orange: '#F97316',
         },
       },
       fontFamily: {
-        sans: ['Inter', 'ui-sans-serif', 'system-ui', 'Segoe UI', 'sans-serif'],
+        sans: ['Geist', 'Inter', 'ui-sans-serif', 'system-ui', 'Segoe UI', 'sans-serif'],
       },
       boxShadow: {
-        glow: '0 0 0 1px rgba(255,255,255,0.06), 0 18px 50px -20px rgba(0,0,0,0.9)',
-        'glow-brand': '0 18px 60px -24px rgba(255,46,99,0.65)',
-        pop: '0 24px 70px -28px rgba(0,0,0,0.95)',
-      },
-      backgroundImage: {
-        'radial-fade':
-          'radial-gradient(1000px 600px at 12% -10%, rgba(255,46,99,0.16), transparent 60%), radial-gradient(900px 520px at 92% 0%, rgba(0,176,255,0.14), transparent 55%), radial-gradient(800px 700px at 50% 120%, rgba(0,230,118,0.10), transparent 60%)',
+        glow: '0 1px 2px rgba(0,0,0,0.35)',
+        'glow-brand': '0 1px 2px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.12)',
+        pop: '0 20px 48px -16px rgba(0,0,0,0.55)',
       },
       keyframes: {
         shimmer: {

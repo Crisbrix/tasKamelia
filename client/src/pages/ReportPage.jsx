@@ -6,10 +6,10 @@ import { StarRating } from '../components/audit/StarRating';
 
 const barColor = (avg) => {
   if (avg == null) return '#3F3F46';
-  if (avg >= 4.5) return '#00E676';
-  if (avg >= 3.5) return '#FFC400';
-  if (avg >= 2.5) return '#FF9100';
-  return '#FF2E63';
+  if (avg >= 4.5) return '#10B981';
+  if (avg >= 3.5) return '#F59E0B';
+  if (avg >= 2.5) return '#D97706';
+  return '#F43F5E';
 };
 
 const fecha = (iso) =>
@@ -21,16 +21,15 @@ function Kpi({ Icon, label, value, sub, color, children }) {
       initial={{ opacity: 0, y: 12, scale: 0.97 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ type: 'spring', stiffness: 320, damping: 30 }}
-      className="glass rounded-2xl p-5"
-      style={{ boxShadow: `inset 0 1px 0 rgba(255,255,255,0.06), 0 18px 44px -30px ${color}` }}
+      className="glass rounded-xl p-5"
     >
       <div className="flex items-center gap-2">
         <span className="grid h-8 w-8 place-items-center rounded-lg" style={{ background: `${color}1F`, color }}>
           <Icon size={15} />
         </span>
-        <span className="text-[11px] font-extrabold uppercase tracking-wider text-zinc-400 light:text-zinc-500">{label}</span>
+        <span className="text-[13px] font-medium text-zinc-400 light:text-zinc-500">{label}</span>
       </div>
-      <p className="mt-3 text-3xl font-extrabold tracking-tight text-white light:text-zinc-900">{value}</p>
+      <p className="mt-3 text-3xl font-semibold tracking-tight text-white light:text-zinc-900">{value}</p>
       {children}
       <p className="mt-1 text-[11px] font-semibold text-zinc-500 light:text-zinc-500">{sub}</p>
     </motion.div>
@@ -54,7 +53,7 @@ export function ReportPage() {
 
   if (error) {
     return (
-      <div className="glass grid place-items-center gap-3 rounded-2xl p-10 text-center">
+      <div className="glass grid place-items-center gap-3 rounded-xl p-10 text-center">
         <p className="text-sm font-bold text-kamelia">{error}</p>
         <button
           type="button"
@@ -70,13 +69,13 @@ export function ReportPage() {
   if (!data) {
     return (
       <div className="space-y-4">
-        <div className="glass h-24 animate-pulse rounded-2xl opacity-60" />
+        <div className="glass h-24 animate-pulse rounded-xl opacity-60" />
         <div className="grid gap-4 sm:grid-cols-3">
           {[0, 1, 2].map((i) => (
-            <div key={i} className="glass h-36 animate-pulse rounded-2xl opacity-60" />
+            <div key={i} className="glass h-36 animate-pulse rounded-xl opacity-60" />
           ))}
         </div>
-        <div className="glass h-64 animate-pulse rounded-2xl opacity-60" />
+        <div className="glass h-64 animate-pulse rounded-xl opacity-60" />
       </div>
     );
   }
@@ -86,7 +85,7 @@ export function ReportPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="flex items-center gap-2 text-2xl font-extrabold tracking-tight text-white light:text-zinc-900">
+        <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight text-white light:text-zinc-900">
           <span className="grid h-8 w-8 place-items-center rounded-xl bg-neon-amber text-night-950">
             <BarChart3 size={17} />
           </span>
@@ -103,19 +102,19 @@ export function ReportPage() {
           label="Promedio semanal Cocina"
           value={weeklyAvg != null ? `${weeklyAvg}.0` : '—'}
           sub={weeklyCount ? `${weeklyCount} calificación${weeklyCount > 1 ? 'es' : ''} esta semana` : 'Sin calificaciones esta semana'}
-          color="#FFC400"
+          color="#F59E0B"
         >
           <div className="mt-1.5">
             <StarRating value={Math.round(weeklyAvg || 0)} size={15} />
           </div>
         </Kpi>
-        <Kpi Icon={CalendarClock} label="Calificaciones totales" value={total} sub="Historial completo de Cocina" color="#00B0FF" />
+        <Kpi Icon={CalendarClock} label="Calificaciones totales" value={total} sub="Historial completo de Cocina" color="#3B82F6" />
         <Kpi
           Icon={TrendingDown}
           label="Peor calificación"
           value={worst[0] ? `${worst[0].stars}.0` : '—'}
           sub={worst[0] ? worst[0].title : 'Sin datos'}
-          color="#FF2E63"
+          color="#F43F5E"
         />
       </div>
 
@@ -123,13 +122,13 @@ export function ReportPage() {
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ type: 'spring', stiffness: 300, damping: 30, delay: 0.08 }}
-        className="glass rounded-2xl p-5"
+        className="glass rounded-xl p-5"
       >
         <div className="mb-4 flex items-center justify-between gap-3">
-          <h2 className="text-sm font-extrabold uppercase tracking-wider text-zinc-200 light:text-zinc-800">
+          <h2 className="text-sm font-medium text-zinc-200 light:text-zinc-800">
             Historial por semana · últimas 8 semanas
           </h2>
-          <span className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-zinc-500">
+          <span className="flex items-center gap-2 text-[11px] font-medium text-zinc-500">
             <span className="h-2 w-2 rounded-full bg-neon-green" /> 5.0
             <span className="h-2 w-2 rounded-full bg-neon-amber" /> 3.5
             <span className="h-2 w-2 rounded-full bg-kamelia" /> 2.5
@@ -146,7 +145,7 @@ export function ReportPage() {
                 className="flex h-full flex-1 flex-col items-center justify-end gap-1"
                 title={`${w.week} · ${w.avg != null ? `${w.avg} ★` : 'sin datos'} · ${w.count} calificación${w.count === 1 ? '' : 'es'}`}
               >
-                <span className="text-[10px] font-extrabold" style={{ color: w.avg != null ? color : '#52525b' }}>
+                <span className="text-[10px] font-semibold" style={{ color: w.avg != null ? color : '#52525b' }}>
                   {w.avg != null ? w.avg : '·'}
                 </span>
                 <div className="flex w-full flex-1 items-end">
@@ -157,12 +156,12 @@ export function ReportPage() {
                     className="w-full rounded-md"
                     style={
                       w.avg != null
-                        ? { background: `linear-gradient(180deg, ${color}, ${color}88)`, boxShadow: `0 0 20px -8px ${color}` }
+                        ? { background: color }
                         : { background: 'rgba(127,127,140,0.18)' }
                     }
                   />
                 </div>
-                <span className="text-[9px] font-bold uppercase tracking-wider text-zinc-500 light:text-zinc-400">{w.label}</span>
+                <span className="text-[10px] font-medium text-zinc-500 light:text-zinc-400">{w.label}</span>
               </div>
             );
           })}
@@ -173,9 +172,9 @@ export function ReportPage() {
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ type: 'spring', stiffness: 300, damping: 30, delay: 0.16 }}
-        className="glass rounded-2xl p-5"
+        className="glass rounded-xl p-5"
       >
-        <h2 className="mb-4 text-sm font-extrabold uppercase tracking-wider text-zinc-200 light:text-zinc-800">
+        <h2 className="mb-4 text-sm font-medium text-zinc-200 light:text-zinc-800">
           Tareas peor calificadas
         </h2>
         {worst.length === 0 ? (
@@ -191,7 +190,7 @@ export function ReportPage() {
                 className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 light:border-black/10 light:bg-white"
               >
                 <span
-                  className="grid h-7 w-7 shrink-0 place-items-center rounded-lg text-[11px] font-extrabold"
+                  className="grid h-7 w-7 shrink-0 place-items-center rounded-lg text-[11px] font-semibold"
                   style={{ background: `${barColor(r.stars)}1F`, color: barColor(r.stars) }}
                 >
                   {i + 1}

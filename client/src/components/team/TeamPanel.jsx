@@ -77,13 +77,12 @@ export function TeamPanel({ open, onClose, zone, user, staff, onRefresh }) {
           >
             <header
               className="flex items-center justify-between border-b border-white/10 px-5 py-4"
-              style={{ background: `linear-gradient(135deg, ${zoneInfo.accent}22, transparent)` }}
             >
               <div>
-                <p className="text-[10px] font-extrabold uppercase tracking-[0.2em]" style={{ color: accent }}>
+                <p className="text-[11px] font-medium" style={{ color: accent }}>
                   Personal · {zoneInfo.label}
                 </p>
-                <h2 className="text-lg font-extrabold text-white light:text-zinc-900">Equipo de zona</h2>
+                <h2 className="text-lg font-semibold text-white light:text-zinc-900">Equipo de zona</h2>
               </div>
               <button
                 type="button"
@@ -97,7 +96,7 @@ export function TeamPanel({ open, onClose, zone, user, staff, onRefresh }) {
 
             <div className="flex-1 space-y-6 overflow-y-auto p-5">
               <section>
-                <p className="mb-3 flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest text-zinc-500">
+                <p className="mb-3 flex items-center gap-2 text-[11px] font-medium text-zinc-500">
                   <Users size={13} /> {staff.length} en activo
                 </p>
                 <ul className="space-y-2">
@@ -115,7 +114,7 @@ export function TeamPanel({ open, onClose, zone, user, staff, onRefresh }) {
                           className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2.5 light:border-black/10 light:bg-white"
                         >
                           <span
-                            className="grid h-9 w-9 place-items-center rounded-full text-xs font-extrabold text-night-950"
+                            className="grid h-9 w-9 place-items-center rounded-full text-xs font-semibold text-night-950"
                             style={{ background: role?.color || '#888' }}
                           >
                             {initials(member.name)}
@@ -146,8 +145,8 @@ export function TeamPanel({ open, onClose, zone, user, staff, onRefresh }) {
                 </ul>
               </section>
 
-              <section className="rounded-2xl border border-white/10 bg-black/25 p-4 light:border-black/10 light:bg-white">
-                <p className="mb-4 flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest" style={{ color: accent }}>
+              <section className="rounded-xl border border-white/10 bg-black/25 p-4 light:border-black/10 light:bg-white">
+                <p className="mb-4 flex items-center gap-2 text-[11px] font-medium" style={{ color: accent }}>
                   <UserPlus size={13} /> Añadir personal
                 </p>
                 <form onSubmit={submit} className="space-y-3">

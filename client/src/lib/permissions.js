@@ -108,3 +108,12 @@ export function canDeleteTask(user, task) {
 }
 
 export const isAdmin = (user) => user?.role === 'gerente';
+
+/** Siguiente paso natural del flujo (botón de avance rápido en la tarjeta). */
+export function nextStatus(user, task) {
+  if (!canEditTask(user, task)) return null;
+  if (task.status === 'todo') return 'doing';
+  if (task.status === 'doing') return 'done';
+  if (task.status === 'done' && task.rating && canMoveToAudit(user, task)) return 'auditado';
+  return null;
+}

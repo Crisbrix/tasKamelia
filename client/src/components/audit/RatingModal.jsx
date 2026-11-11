@@ -51,21 +51,21 @@ export function RatingModal({ task, user, onClose, onSubmit }) {
       subtitle={task ? `${task.area} · "${task.title}"` : ''}
     >
       <div className="space-y-5">
-        <div className="flex flex-col items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-6 light:border-black/10 light:bg-black/[0.02]">
+        <div className="flex flex-col items-center gap-3 rounded-xl border border-white/10 bg-white/[0.03] px-4 py-6 light:border-black/10 light:bg-black/[0.02]">
           <StarRating value={stars} onChange={setStars} size={36} />
           <motion.p
             key={stars}
             initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ type: 'spring', stiffness: 420, damping: 26 }}
-            className="text-xs font-extrabold uppercase tracking-[0.18em] text-neon-amber light:text-amber-700"
+            className="text-xs font-medium text-neon-amber light:text-amber-700"
           >
             {stars ? `${stars}.0 — ${STAR_LABELS[stars - 1]}` : 'Toca una estrella'}
           </motion.p>
         </div>
 
         <label className="block space-y-1.5">
-          <span className="text-xs font-bold uppercase tracking-wider text-zinc-400 light:text-zinc-500">
+          <span className="text-xs font-medium text-zinc-400 light:text-zinc-500">
             Comentario (opcional)
           </span>
           <textarea
@@ -98,7 +98,7 @@ export function RatingModal({ task, user, onClose, onSubmit }) {
               <ShieldCheck size={14} strokeWidth={3} />
             </span>
             <span className="min-w-0">
-              <span className="block text-[13px] font-extrabold text-white light:text-zinc-900">Mover a "Auditado" al guardar</span>
+              <span className="block text-[13px] font-semibold text-white light:text-zinc-900">Mover a "Auditado" al guardar</span>
               <span className="block text-[11px] text-zinc-400 light:text-zinc-500">Cierra la tarea en la columna de auditoría</span>
             </span>
           </motion.button>

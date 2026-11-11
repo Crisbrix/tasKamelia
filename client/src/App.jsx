@@ -14,7 +14,7 @@ function Router() {
         <motion.div
           animate={{ scale: [1, 1.35, 1], opacity: [0.5, 1, 0.5] }}
           transition={{ repeat: Infinity, duration: 1.2, ease: 'easeInOut' }}
-          className="h-12 w-12 rounded-2xl bg-kamelia shadow-glow-brand"
+          className="h-12 w-12 rounded-xl bg-kamelia"
         />
       </div>
     );
